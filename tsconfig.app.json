@@ -3,7 +3,13 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
-    "types": []
+    "types": [
+      /*
+       * 'node' is needed to solve error "Cannot find name 'Buffer'."
+       * Requires '@types/node' to be installed.
+       */
+      "node"
+    ]
   },
   "files": [
     "src/main.ts"

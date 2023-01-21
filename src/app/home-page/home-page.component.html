@@ -1,0 +1,11 @@
+<header>
+  <h1>Home</h1>
+</header>
+<section>
+  <button type="button" mat-raised-button (click)="fileInput.click()">Choose File</button>
+  <input hidden (change)="onFileSelected()" #fileInput type="file" id="file">
+  <p>{{srcResult | json}}</p>
+
+  <mat-progress-bar mode="determinate" [value]="fileProcessValue"></mat-progress-bar>
+</section>
+
