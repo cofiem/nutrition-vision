@@ -16,6 +16,7 @@ import { HelpPageComponent } from './help-page/help-page.component';
 import { AboutPageComponent } from './about-page/about-page.component';
 import { NotFoundPageComponent } from './not-found-page/not-found-page.component';
 import {MatProgressBarModule} from "@angular/material/progress-bar";
+import {MatCardModule} from "@angular/material/card";
 
 @NgModule({
   declarations: [
@@ -26,18 +27,19 @@ import {MatProgressBarModule} from "@angular/material/progress-bar";
     AboutPageComponent,
     NotFoundPageComponent
   ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    BrowserAnimationsModule,
-    LayoutModule,
-    MatToolbarModule,
-    MatButtonModule,
-    MatSidenavModule,
-    MatIconModule,
-    MatListModule,
-    MatProgressBarModule
-  ],
+    imports: [
+        BrowserModule,
+        AppRoutingModule,
+        BrowserAnimationsModule,
+        LayoutModule,
+        MatToolbarModule,
+        MatButtonModule,
+        MatSidenavModule,
+        MatIconModule,
+        MatListModule,
+        MatProgressBarModule,
+        MatCardModule
+    ],
   providers: [],
   bootstrap: [AppComponent]
 })
