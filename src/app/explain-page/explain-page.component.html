@@ -1,0 +1,140 @@
+<header>
+  <h1>Explain</h1>
+</header>
+<section>
+
+  <!-- select image -->
+
+  <mat-card class="step-card">
+    <mat-card-header>
+      <mat-card-title>Select image</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p>
+        Image info will be shown here.
+      </p>
+      <mat-divider></mat-divider>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-raised-button (click)="fileInput.click()">Choose Image File</button>
+      <input hidden (change)="onFileSelected()" #fileInput type="file" id="file">
+    </mat-card-actions>
+    <mat-card-footer>
+      <mat-progress-bar mode="determinate" value="0"></mat-progress-bar>
+    </mat-card-footer>
+  </mat-card>
+
+  <!-- resize -->
+
+  <mat-card class="step-card">
+    <mat-card-header>
+      <mat-card-title>Resize image - option 1</mat-card-title>
+    </mat-card-header>
+    <img mat-card-image id="imageResizeOption1" alt="Preview of image 1">
+    <mat-card-footer>
+      <mat-progress-bar mode="determinate" value="0"></mat-progress-bar>
+    </mat-card-footer>
+  </mat-card>
+
+  <!-- grayscale -->
+
+  <mat-card class="step-card">
+    <mat-card-header>
+      <mat-card-title>Grayscale image - option 1</mat-card-title>
+    </mat-card-header>
+    <img mat-card-image id="imageGrayscaleOption1" alt="Preview of image 1">
+    <mat-card-footer>
+      <mat-progress-bar mode="determinate" value="0"></mat-progress-bar>
+    </mat-card-footer>
+  </mat-card>
+
+  <mat-card class="step-card">
+    <mat-card-header>
+      <mat-card-title>Grayscale image - option 2</mat-card-title>
+    </mat-card-header>
+    <img mat-card-image id="imageGrayscaleOption2" alt="Preview of image 1">
+    <mat-card-footer>
+      <mat-progress-bar mode="determinate" value="0"></mat-progress-bar>
+    </mat-card-footer>
+  </mat-card>
+
+  <!-- threshold -->
+
+  <mat-card class="step-card">
+    <mat-card-header>
+      <mat-card-title>Threshold image - option 1</mat-card-title>
+    </mat-card-header>
+    <img mat-card-image id="imageThresholdOption1" alt="Preview of image 1">
+    <mat-card-footer>
+      <mat-progress-bar mode="determinate" value="0"></mat-progress-bar>
+    </mat-card-footer>
+  </mat-card>
+
+  <mat-card class="step-card">
+    <mat-card-header>
+      <mat-card-title>Threshold image - option 2</mat-card-title>
+    </mat-card-header>
+    <img mat-card-image id="imageThresholdOption2" alt="Preview of image 1">
+    <mat-card-footer>
+      <mat-progress-bar mode="determinate" value="0"></mat-progress-bar>
+    </mat-card-footer>
+  </mat-card>
+
+  <mat-card class="step-card">
+    <mat-card-header>
+      <mat-card-title>Threshold image - option 3</mat-card-title>
+    </mat-card-header>
+    <img mat-card-image id="imageThresholdOption3" alt="Preview of image 1">
+    <mat-card-footer>
+      <mat-progress-bar mode="determinate" value="0"></mat-progress-bar>
+    </mat-card-footer>
+  </mat-card>
+
+  <!-- de-skew -->
+
+  <mat-card class="step-card">
+    <mat-card-header>
+      <mat-card-title>De-skew image - option 1</mat-card-title>
+    </mat-card-header>
+    <img mat-card-image id="imageDeSkewOption1" alt="Preview of image 1">
+    <mat-card-footer>
+      <mat-progress-bar mode="determinate" value="0"></mat-progress-bar>
+    </mat-card-footer>
+  </mat-card>
+  <mat-card class="step-card">
+    <mat-card-header>
+      <mat-card-title>De-skew image - option 2</mat-card-title>
+    </mat-card-header>
+    <img mat-card-image id="imageDeSkewOption2" alt="Preview of image 1">
+    <mat-card-footer>
+      <mat-progress-bar mode="determinate" value="0"></mat-progress-bar>
+    </mat-card-footer>
+  </mat-card>
+  <mat-card class="step-card">
+    <mat-card-header>
+      <mat-card-title>De-skew image - option 3</mat-card-title>
+    </mat-card-header>
+    <img mat-card-image id="imageDeSkewOption3" alt="Preview of image 1">
+    <mat-card-footer>
+      <mat-progress-bar mode="determinate" value="0"></mat-progress-bar>
+    </mat-card-footer>
+  </mat-card>
+
+  <!-- ocr -->
+
+  <mat-card class="step-card">
+    <mat-card-header>
+      <mat-card-title>OCR text - option 1</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p>
+        Recognized text will be shown here.
+      </p>
+      <mat-divider></mat-divider>
+    </mat-card-content>
+    <mat-card-footer>
+      <mat-progress-bar mode="determinate" value="0"></mat-progress-bar>
+    </mat-card-footer>
+  </mat-card>
+
+</section>

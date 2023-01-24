@@ -92,6 +92,7 @@ export class TesseractService {
   async resizeImage(file: File) {
     try {
       return await readAndCompressImage(file, this.imageResizeConfig);
+      scaleImage
     } catch (error) {
       console.error(error);
       throw(error);

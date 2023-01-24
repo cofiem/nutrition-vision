@@ -1,10 +1,28 @@
 // noinspection UnnecessaryLocalVariableJS
 
-// @ts-nocheck
-
-import * as cv from "../../assets/js/opencv"
-import {createWorker} from "tesseract.js";
+import {createWorker, RecognizeOptions, RecognizeResult, Rectangle} from "tesseract.js";
 import {fromEvent} from "rxjs";
+import * as Tesseract from "tesseract.js";
+import {
+  opencvWrapADAPTIVE_THRESH_GAUSSIAN_C,
+  opencvWrapADAPTIVE_THRESH_MEAN_C,
+  opencvWrapAdaptiveThreshold,
+  opencvWrapBORDER_REFLECT,
+  opencvWrapCOLOR_BGR2GRAY,
+  opencvWrapCOLOR_RGBA2GRAY,
+  opencvWrapCopyMakeBorder,
+  opencvWrapCvtColor,
+  opencvWrapCvtColorFull, opencvWrapDilate,
+  opencvWrapEqualizeHist, opencvWrapFindContours,
+  opencvWrapGaussianBlur, opencvWrapGetStructuringElement,
+  opencvWrapImread,
+  opencvWrapIntegral,
+  opencvWrapIntensityTransformGammaCorrection,
+  opencvWrapMat, opencvWrapMORPH_RECT,
+  opencvWrapTHRESH_BINARY,
+  opencvWrapTHRESH_BINARY_INV, opencvWrapTHRESH_OTSU,
+  opencvWrapThreshold
+} from "./opencv-wrapper";
 
 
 /**
@@ -12,7 +30,7 @@ import {fromEvent} from "rxjs";
  *
  * From: https://gist.github.com/Jonarod/77d8e3a15c5c1bb55fa9d057d12f95bd
  *
- * @param img The iamge element.
+ * @param img The image element.
  * @param limit The scale limit.
  * @returns The results from drawing the image to a canvas.
  */
@@ -41,6 +59,46 @@ const drawAndScaleImage = function (img: HTMLImageElement, limit: number = 256):
   ctx.drawImage(img, 0, 0);
 
   return {canvas: canvas, context: ctx, width: width, height: height};
+}
+
+/**
+ * Convert an HTML image element to image data.
+ *
+ * @param image The HTML image element.
+ * @returns The image data.
+ */
+const convertImageToImageData = function (image: HTMLImageElement): ImageData {
+  const canvas = document.createElement("canvas");
+  canvas.width = image.width;
+  canvas.height = image.height;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Cannot get canvas 2d context.");
+
+  context.drawImage(image, 0, 0);
+
+  const result = context.getImageData(0, 0, canvas.width, canvas.height);
+  return result;
+}
+
+/**
+ * Convert image data to an HTML image.
+ *
+ * @param imageData The image data.
+ * @returns The HTML image element.
+ */
+const convertImageDataToImage = function (imageData: ImageData): HTMLImageElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = imageData.width;
+  canvas.height = imageData.height;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Cannot get canvas 2d context.");
+
+  context.putImageData(imageData, 0, 0);
+
+  const image = new Image();
+  image.src = canvas.toDataURL();
+
+  return image;
 }
 
 /**
@@ -186,6 +244,82 @@ const convertTwoDimArrayToImageData = function (data: number[][]): ImageData {
 }
 
 /**
+ * Resize an image.
+ *
+ * From: https://github.com/eyalc4/ts-image-resizer
+ * Can also consider: https://github.com/ericnograles/browser-image-resizer
+ *
+ * @param image The HTML image element.
+ * @param width The image width.
+ * @param height The image height.
+ * @returns The image data for the resized image.
+ */
+const imageResizeVariation01 = function (image: HTMLImageElement, width: number, height: number): ImageData {
+  if (!width || width < 1 || !height || height < 1) {
+    throw new Error("Width and height must be greater than 0.");
+  }
+
+// Make sure the width and height preserve the original aspect ratio and adjust if needed
+  if (image.height > image.width) {
+    width = Math.floor(height * (image.width / image.height));
+  } else {
+    height = Math.floor(width * (image.height / image.width));
+  }
+
+  let resizingCanvas: HTMLCanvasElement = document.createElement('canvas');
+  let resizingCanvasContext = resizingCanvas.getContext("2d");
+  if (!resizingCanvasContext) throw new Error("Cannot get canvas 2d context.");
+
+  // Start with original image size
+  resizingCanvas.width = image.width;
+  resizingCanvas.height = image.height;
+
+  // Draw the original image on the (temp) resizing canvas
+  resizingCanvasContext.drawImage(image, 0, 0, resizingCanvas.width, resizingCanvas.height);
+
+  let curImageDimensions = {
+    width: Math.floor(image.width),
+    height: Math.floor(image.height)
+  };
+
+  let halfImageDimensions: { width: number | undefined, height: number | undefined } = {
+    width: undefined,
+    height: undefined
+  };
+
+  // Reduce the size by 50% each iteration, until the size is less than 2x time the target size
+  // The motivation is to reduce the aliasing that would have been created with direct reduction
+  // of very big image to small image.
+  while (curImageDimensions.width * 0.5 > width) {
+    // Reduce the resizing canvas by half and refresh the image
+    halfImageDimensions.width = Math.floor(curImageDimensions.width * 0.5);
+    halfImageDimensions.height = Math.floor(curImageDimensions.height * 0.5);
+
+    resizingCanvasContext.drawImage(resizingCanvas, 0, 0, curImageDimensions.width, curImageDimensions.height,
+      0, 0, halfImageDimensions.width, halfImageDimensions.height);
+
+    curImageDimensions.width = halfImageDimensions.width;
+    curImageDimensions.height = halfImageDimensions.height;
+  }
+
+  // Now do final resize for the resizingCanvas to meet the dimension requirments
+  // directly to the output canvas, that will output the final image
+  let outputCanvas: HTMLCanvasElement = document.createElement('canvas');
+  let outputCanvasContext = outputCanvas.getContext("2d");
+  if (!outputCanvasContext) throw new Error("Cannot get canvas 2d context.");
+
+  outputCanvas.width = width;
+  outputCanvas.height = height;
+
+  outputCanvasContext.drawImage(
+    resizingCanvas, 0, 0, curImageDimensions.width, curImageDimensions.height,
+    0, 0, width, height);
+
+  const result = outputCanvasContext.getImageData(0, 0, outputCanvas.width, outputCanvas.height);
+  return result;
+}
+
+/**
  * Apply a threshold (binarization) to image pixel data.
  *
  * Based on https://hacks.mozilla.org/2011/01/how-to-develop-a-html5-image-uploader/
@@ -196,7 +330,7 @@ const convertTwoDimArrayToImageData = function (data: number[][]): ImageData {
  * @param method The threshold method to use.
  * @returns A one dimensional array of image pixel data with the threshold applied.
  */
-const thresholdImageBasic = function (pixels: ImageData, threshold: number = 127, method: string = 'luminance'): Uint8ClampedArray {
+const imageThresholdVariation01 = function (pixels: ImageData, threshold: number = 127, method: string = 'luminance'): Uint8ClampedArray {
   if (threshold < 0 || threshold > 255) {
     throw new Error("Threshold value must be between 0 and 255.");
   }
@@ -249,7 +383,7 @@ const thresholdImageBasic = function (pixels: ImageData, threshold: number = 127
  * @param threshold The threshold percentage (0 - 100)
  * @returns A two-dimensional array of pixel data with the threshold applied.
  */
-const thresholdImageAdaptiveCustom01 = function (
+const imageThresholdVariation02 = function (
   imageInput: string | HTMLImageElement | HTMLCanvasElement,
   threshold: number = 25): number[][] {
   if (threshold < 0 || threshold > 100) {
@@ -257,10 +391,10 @@ const thresholdImageAdaptiveCustom01 = function (
   }
 
   // load the image
-  const image = cv.imread(imageInput);
+  const image = opencvWrapImread(imageInput);
 
   // Convert image to grayscale
-  const gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY);
+  const gray = opencvWrapCvtColor(image, opencvWrapCOLOR_BGR2GRAY);
 
   // Original image size
   let orignrows: number, origncols: number;
@@ -276,12 +410,12 @@ const thresholdImageAdaptiveCustom01 = function (
 
   // Padding image
   // _, top, bottom, left, right, borderType
-  const aux = cv.copyMakeBorder(gray, Mextend, Mextend, Nextend, Nextend, cv.BORDER_REFLECT);
+  const aux = opencvWrapCopyMakeBorder(gray, Mextend, Mextend, Nextend, Nextend, opencvWrapBORDER_REFLECT);
 
   const windows: number[][] = new Array(M).fill(0).map(() => new Array(N).fill(0));
 
   // Image integral calculation
-  const imageIntegral = cv.integral(aux, windows, -1);
+  const imageIntegral = opencvWrapIntegral(aux, windows, -1);
 
   // Integral image size
   let nrows: number, ncols: number;
@@ -347,7 +481,7 @@ const thresholdImageAdaptiveCustom01 = function (
  * @param thresholdConstant The constant subtracted from the mean or weighted mean. Usually positive, but may be zero or negative.
  * @returns The thresholded image as
  */
-const thresholdImageAdaptiveCv = function (
+const imageThresholdVariation03 = function (
   imageInput: string | HTMLImageElement | HTMLCanvasElement,
   thresholdValue: number = 0, thresholdMethod: string = 'gaussian',
   thresholdType: string = 'standard', thresholdBlockSize: number = 11,
@@ -367,10 +501,10 @@ const thresholdImageAdaptiveCv = function (
   let thresholdMethodValue: number;
   switch (thresholdMethod) {
     case 'gaussian':
-      thresholdMethodValue = cv.ADAPTIVE_THRESH_GAUSSIAN_C;
+      thresholdMethodValue = opencvWrapADAPTIVE_THRESH_GAUSSIAN_C;
       break;
     case 'mean':
-      thresholdMethodValue = cv.ADAPTIVE_THRESH_MEAN_C;
+      thresholdMethodValue = opencvWrapADAPTIVE_THRESH_MEAN_C;
       break;
     default:
       throw new Error("Invalid threshold method " + thresholdMethod);
@@ -380,10 +514,10 @@ const thresholdImageAdaptiveCv = function (
   let thresholdTypeValue: number;
   switch (thresholdType) {
     case 'standard':
-      thresholdTypeValue = cv.THRESH_BINARY;
+      thresholdTypeValue = opencvWrapTHRESH_BINARY;
       break;
     case 'inverse':
-      thresholdTypeValue = cv.THRESH_BINARY_INV;
+      thresholdTypeValue = opencvWrapTHRESH_BINARY_INV;
       break;
     default:
       throw new Error("Invalid threshold type " + thresholdType);
@@ -398,22 +532,22 @@ const thresholdImageAdaptiveCv = function (
   // input and output images
 
   // src	source 8-bit single-channel image.
-  const src = cv.imread(imageInput);
+  const src = opencvWrapImread(imageInput);
 
   // dst	destination image of the same size and the same type as src.
-  const dst = new cv.Mat();
+  const dst = opencvWrapMat();
 
   // convert the source image to grayscale
-  cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+  opencvWrapCvtColorFull(src, src, opencvWrapCOLOR_RGBA2GRAY, 0);
 
   // (optional) gamma correction
   const gamma = 1.2;
-  cv.intensity_transform.gammaCorrection(src, src, gamma);
+  opencvWrapIntensityTransformGammaCorrection(src, src, gamma);
 
   // (optional) histogramm equalization
-  cv.equalizeHist(src, src);
+  opencvWrapEqualizeHist(src, src);
 
-  const result = cv.adaptiveThreshold(src, dst, thresholdValue, thresholdMethodValue, thresholdTypeValue, thresholdBlockSize, thresholdConstant);
+  const result = opencvWrapAdaptiveThreshold(src, dst, thresholdValue, thresholdMethodValue, thresholdTypeValue, thresholdBlockSize, thresholdConstant);
   return result;
   // cv.imshow('canvasOutput', dst);
   // src.delete();
@@ -453,6 +587,125 @@ const createTesseractWorker = async function (
   return tesseractWorker;
 }
 
+const executeTesseractRecognize = async function (
+  worker: Tesseract.Worker, image: ImageData, rect: Rectangle | undefined): Promise<RecognizeResult | undefined> {
+  if (!worker || !image) {
+    throw new Error("Must provider worker and image.");
+  }
+
+  const options: Partial<RecognizeOptions> = {rotateAuto: true};
+
+  if (rect) {
+    console.log("Init tesseract using rectangle  " + JSON.stringify(rect) + ".");
+    options.rectangle = rect;
+  }
+
+  console.log("Started tesseract recognise for image with width " + image.width + " height " + image.height + ".");
+
+  const result = await worker.recognize(image, {rotateAuto: true}, {
+    osd: true, text: true, blocks: true,
+
+    imageColor: true, imageGrey: true, imageBinary: true,
+    debug: false, pdf: false, unlv: false, tsv: false,
+    hocr: false, box: false,
+  });
+
+  console.log("Finished tesseract recognise.");
+
+  return result;
+}
+
+/**
+ * From: https://github.com/JPLeoRX/opencv-text-deskew/blob/master/python-service/services/deskew_service.py
+ * See: https://becominghuman.ai/how-to-automatically-deskew-straighten-a-text-image-using-opencv-a0c30aed83df
+ */
+const calculateDeSkewAngleVariation01 = function (
+  imageInput: string | HTMLImageElement | HTMLCanvasElement): number {
+
+  // create an OpenCV image
+  const image = opencvWrapImread(imageInput);
+
+  // Convert image to grayscale
+  const gray = opencvWrapCvtColor(image, opencvWrapCOLOR_BGR2GRAY);
+
+  // apply gaussian blue
+  const blur = opencvWrapGaussianBlur(gray, 9);
+
+  // apply threshold
+  const threshold = opencvWrapThreshold(blur, 0, 255, opencvWrapTHRESH_BINARY_INV + opencvWrapTHRESH_OTSU);
+
+  // Apply dilation to merge text into meaningful lines/paragraphs.
+  // Use larger kernel on X axis to merge characters into single line, cancelling out any spaces.
+  // But use smaller kernel on Y axis to separate between different blocks of text
+  const kernel = opencvWrapGetStructuringElement(opencvWrapMORPH_RECT, 30, 5);
+  const dilateIterations = 5;
+  const dilate = opencvWrapDilate(threshold, kernel, dilateIterations);
+
+  // Find all contours
+  const contours = opencvWrapFindContours(dilate);
+
+  // Find the largest contour and surround in min area box
+  const largestContour = contours[0];
+  const minAreaRect = cv.minAreaRect(largestContour);
+
+  // Determine the angle. Convert it to the value that was originally used to obtain skewed image
+  let angle = minAreaRect[-1]
+  let skew: number;
+  if (angle < -45) {
+    angle = 90 + angle
+    skew = -1.0 * angle;
+  } else if (angle > 45) {
+    angle = 90 - angle
+    skew = angle;
+  } else {
+    skew = -1.0 * angle;
+  }
+
+  // Maybe use the average angle of all contours.
+  // allContourAngles = [cv2.minAreaRect(c)[-1] for c in contours]
+  // angle = sum(allContourAngles) / len(allContourAngles)
+  //
+  // Maybe take the angle of the middle contour.
+  // middleContour = contours[len(contours) // 2]
+  // angle = cv2.minAreaRect(middleContour)[-1]
+  //
+  // Maybe average angle between largest, smallest and middle contours.
+  // largestContour = contours[0]
+  // middleContour = contours[len(contours) // 2]
+  // smallestContour = contours[-1]
+  // angle = sum([cv2.minAreaRect(largestContour)[-1], cv2.minAreaRect(middleContour)[-1], cv2.minAreaRect(smallestContour)[-1]]) / 3
+
+  return skew;
+}
+
+/**
+ * De-skew using OpenCV.
+ */
+const imageDeSkewVariation01 = function () {
+  // todo
+  // newImage = cvImage.copy()
+  //         (h, w) = newImage.shape[:2]
+  //         center = (w // 2, h // 2)
+  //         M = cv2.getRotationMatrix2D(center, angle, 1.0)
+  //         newImage = cv2.warpAffine(newImage, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+  //         return
+}
+
+/**
+ * De-skew using canvas transforms.
+ */
+const imageDeSkewVariation02 = function () {
+  // todo: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/rotate
+  //       https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/translate
+}
+
+/**
+ * De-skew using css transforms.
+ */
+const imageDeSkewVariation03 = function () {
+  // todo: https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate
+}
+
 export {
   drawAndScaleImage,
   convertBlobToBase64,
@@ -461,9 +714,15 @@ export {
   convertObjectURLToBlob,
   convertBlobToObjectURL,
   convertTwoDimArrayToImageData,
-  thresholdImageBasic,
-  thresholdImageAdaptiveCustom01,
-  thresholdImageAdaptiveCv,
+  imageResizeVariation01,
+  imageThresholdVariation01,
+  imageThresholdVariation02,
+  imageThresholdVariation03,
   createTesseractWorker,
+  executeTesseractRecognize,
+  calculateDeSkewAngleVariation01,
+  imageDeSkewVariation01,
+  imageDeSkewVariation02,
+  imageDeSkewVariation03,
 };
 

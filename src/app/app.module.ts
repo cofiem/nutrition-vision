@@ -17,6 +17,7 @@ import { AboutPageComponent } from './about-page/about-page.component';
 import { NotFoundPageComponent } from './not-found-page/not-found-page.component';
 import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {MatCardModule} from "@angular/material/card";
+import { ExplainPageComponent } from './explain-page/explain-page.component';
 
 @NgModule({
   declarations: [
@@ -25,7 +26,8 @@ import {MatCardModule} from "@angular/material/card";
     HomePageComponent,
     HelpPageComponent,
     AboutPageComponent,
-    NotFoundPageComponent
+    NotFoundPageComponent,
+    ExplainPageComponent
   ],
     imports: [
         BrowserModule,
