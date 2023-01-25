@@ -1,3 +1,8 @@
+/*
+ * This file is a way to suppress the Typescript 'missing types' errors,
+ * as OpenCV.js does not have types defined.
+ */
+
 // @ts-ignore
 import * as cv from "../../assets/js/opencv"
 

@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { TesseractService } from './tesseract.service';
+import { ProcessingService } from './processing.service';
 
-describe('TesseractService', () => {
-  let service: TesseractService;
+describe('ProcessingService', () => {
+  let service: ProcessingService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(TesseractService);
+    service = TestBed.inject(ProcessingService);
   });
 
   it('should be created', () => {

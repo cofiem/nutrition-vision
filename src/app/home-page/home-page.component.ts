@@ -1,5 +1,6 @@
 import {Component} from '@angular/core';
-import {TesseractService} from "../processing/tesseract.service";
+import {ProcessingService} from "../processing/processing.service";
+import {convertUploadToFile} from "../processing/conversions-01";
 
 @Component({
   selector: 'app-home-page',
@@ -11,26 +12,22 @@ export class HomePageComponent {
 
   fileProcessValue: number = 0;
 
-  constructor(private tesseractService: TesseractService) {
+  constructor(private processingService: ProcessingService) {
 
   }
 
   async onFileSelected() {
     // get the selected file
     const inputNode: any = document.querySelector('#file');
-    const inputFile = inputNode.files[0];
 
-    // ensure selected file is an image
-    if (!inputFile.type.match(/image.*/)) {
-      return;
-    }
+    const inputFile = convertUploadToFile(inputNode);
 
     // show preview of selected file
     const imageOriginal: any = document.querySelector('#previewImageOriginal');
     imageOriginal.src = window.URL.createObjectURL(inputFile);
 
     // run OCR
-    const result = await this.tesseractService.doRecognize(inputNode.files[0], undefined);
+    const result = await this.processingService.doRecognize(inputNode.files[0], undefined);
     if (result) {
       this.text = result.data.text;
 
@@ -44,19 +41,5 @@ export class HomePageComponent {
       if (imgBinary && result.data.imageColor) imgBinary.src = result.data.imageBinary;
     }
 
-  }
-
-  webWorkerTest() {
-    if (typeof Worker !== 'undefined') {
-      // Create a new
-      const worker = new Worker(new URL('../processing/convert.worker', import.meta.url));
-      worker.onmessage = ({data}) => {
-        console.log(`page got message: ${data}`);
-      };
-      worker.postMessage('hello');
-    } else {
-      // Web workers are not supported in this environment.
-      // You should add a fallback so that your program still executes correctly.
-    }
   }
 }

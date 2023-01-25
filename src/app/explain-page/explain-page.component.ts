@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import {TesseractService} from "../processing/tesseract.service";
+import {ProcessingService} from "../processing/processing.service";
 
 @Component({
   selector: 'app-explain-page',
@@ -9,7 +9,7 @@ import {TesseractService} from "../processing/tesseract.service";
 export class ExplainPageComponent {
 
 
-  constructor(private tesseractService: TesseractService) {
+  constructor(private processingService: ProcessingService) {
   }
 
   async onFileSelected() {
