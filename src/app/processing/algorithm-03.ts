@@ -10,20 +10,37 @@
  * Resize an image.
  *
  * @param image The HTML image element.
- * @param width The image width.
- * @param height The image height.
+ * @param targetWidth The target image width.
+ * @param targetHeight The target image height.
  * @returns The image data for the resized image.
  */
-const imageResizeVariation01 = function (image: HTMLImageElement, width: number, height: number): ImageData {
-  if (!width || width < 1 || !height || height < 1) {
+const imageResizeVariation01 = function (image: HTMLImageElement, targetWidth: number, targetHeight: number): ImageData {
+  if (!targetWidth || targetWidth < 1 || !targetHeight || targetHeight < 1) {
     throw new Error("Width and height must be greater than 0.");
   }
 
 // Make sure the width and height preserve the original aspect ratio and adjust if needed
+  let width: number = targetWidth;
+  let height: number = targetHeight;
   if (image.height > image.width) {
-    width = Math.floor(height * (image.width / image.height));
+    const value = targetHeight * (image.width / image.height);
+    width = Math.floor(value);
   } else {
-    height = Math.floor(width * (image.height / image.width));
+    console.log(JSON.stringify({
+      targetWidth: targetWidth,
+      imageHeight: image.height,
+      imageWidth: image.width,
+    }))
+    const value = targetWidth * (image.height / image.width);
+    height = Math.floor(value);
+  }
+
+  if (!width || isNaN(width) || width < 1) {
+    throw new Error("Invalid width " + JSON.stringify(width));
+  }
+
+  if (!height || isNaN(height) || height < 1) {
+    throw new Error("Invalid height " + JSON.stringify(height));
   }
 
   let resizingCanvas: HTMLCanvasElement = document.createElement('canvas');

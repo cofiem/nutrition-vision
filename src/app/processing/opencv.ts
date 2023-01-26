@@ -1,23 +1,63 @@
-/*
- * This file is a way to suppress the Typescript 'missing types' errors,
- * as OpenCV.js does not have types defined.
- */
 
-// @ts-ignore
-import * as cv from "../../assets/js/opencv"
+import OpenCV from "../../assets/js/opencv";
+import * as cv from "../../assets/js/opencv";
+import {isDevMode} from "@angular/core";
 
-const opencvWrapImread = function (image: any): any {
+// console.log(cv);
+
+let initOpenCVDone = false;
+
+const initOpenCV = async function (): Promise<any> {
+  if (initOpenCVDone) {
+    // @ts-ignore
+    return OpenCV;
+  }
   // @ts-ignore
-  return cv.imread(image);
+  if (OpenCV.getBuildInformation) {
+    if (isDevMode()) {
+      console.log("direct");
+      // @ts-ignore
+      console.log(OpenCV.getBuildInformation());
+    }
+
+    initOpenCVDone = true;
+    // @ts-ignore
+    return OpenCV;
+  } else {
+    // WASM
+    // @ts-ignore
+    if (OpenCV instanceof Promise) {
+      // @ts-ignore
+      const result = await OpenCV;
+      if (isDevMode()) {
+        console.log("async");
+        console.log(result.getBuildInformation());
+      }
+
+      initOpenCVDone = true;
+      return result;
+    } else {
+      // @ts-ignore
+      OpenCV['onRuntimeInitialized'] = () => {
+        if (isDevMode()) {
+          console.log("func");
+          // @ts-ignore
+          console.log(OpenCV.getBuildInformation());
+        }
+
+        initOpenCVDone = true;
+        // @ts-ignore
+        return OpenCV;
+      }
+    }
+  }
 }
+// initOpenCV();
 
-const opencvWrapCvtColor = function (image: any, method: any): any {
-  // @ts-ignore
-  return cv.cvtColor(image, method);
-}
-const opencvWrapCvtColorFull = function (src: any, dst: any, method: any, num: any): any {
-  // @ts-ignore
-  return cv.cvtColor(src, dst, method, num);
+const opencvWrapCvtColor = function (src: OpenCV.Mat, code: number): any {
+  const dst = new OpenCV.Mat();
+  OpenCV.cvtColor(src, dst, code, 0);
+  return dst;
 }
 
 const opencvWrapGaussianBlur = function (image: any, size: any): any {
@@ -74,54 +114,16 @@ const opencvWrapDilate = function (image: any, kernel: any, iterations: any): an
 
 const opencvWrapFindContours = function (image: any): any {
   // Extracts all contours from the image, and resorts them by area (from largest to smallest)
-  // todo
+  // @ts-ignore
   let [contours, hierarchy] = cv.findContours(image, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
-  contours = sorted(contours, key = cv.contourArea, reverse = True)
+  // TODO
+  // contours = sorted(contours, key = cv.contourArea, reverse = True)
   return contours
 }
 
-// @ts-ignore
-const opencvWrapCOLOR_BGR2GRAY = cv.COLOR_BGR2GRAY;
-// @ts-ignore
-const opencvWrapCOLOR_RGBA2GRAY = cv.COLOR_RGBA2GRAY;
-// @ts-ignore
-const opencvWrapADAPTIVE_THRESH_GAUSSIAN_C = cv.ADAPTIVE_THRESH_GAUSSIAN_C;
-// @ts-ignore
-const opencvWrapADAPTIVE_THRESH_MEAN_C = cv.ADAPTIVE_THRESH_MEAN_C;
-// @ts-ignore
-const opencvWrapTHRESH_BINARY = cv.THRESH_BINARY;
-// @ts-ignore
-const opencvWrapTHRESH_BINARY_INV = cv.THRESH_BINARY_INV;
-// @ts-ignore
-const opencvWrapBORDER_REFLECT = cv.BORDER_REFLECT;
-// @ts-ignore
-const opencvWrapTHRESH_OTSU = cv.THRESH_OTSU;
-// @ts-ignore
-const opencvWrapMORPH_RECT = cv.MORPH_RECT;
-
-
 export {
-  opencvWrapImread,
-  opencvWrapCvtColor,
-  opencvWrapCvtColorFull,
-  opencvWrapGaussianBlur,
-  opencvWrapCopyMakeBorder,
-  opencvWrapIntegral,
-  opencvWrapMat,
-  opencvWrapIntensityTransformGammaCorrection,
-  opencvWrapEqualizeHist,
-  opencvWrapThreshold,
-  opencvWrapAdaptiveThreshold,
-  opencvWrapGetStructuringElement,
-  opencvWrapDilate,
-  opencvWrapFindContours,
-  opencvWrapCOLOR_BGR2GRAY,
-  opencvWrapCOLOR_RGBA2GRAY,
-  opencvWrapADAPTIVE_THRESH_GAUSSIAN_C,
-  opencvWrapADAPTIVE_THRESH_MEAN_C,
-  opencvWrapTHRESH_BINARY,
-  opencvWrapTHRESH_BINARY_INV,
-  opencvWrapBORDER_REFLECT,
-  opencvWrapTHRESH_OTSU,
-  opencvWrapMORPH_RECT,
+  OpenCV,
+  opencvWrapCvtColor
 }
+
+

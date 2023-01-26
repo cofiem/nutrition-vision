@@ -1,14 +1,5 @@
-import {
-  opencvWrapADAPTIVE_THRESH_GAUSSIAN_C,
-  opencvWrapADAPTIVE_THRESH_MEAN_C, opencvWrapAdaptiveThreshold,
-  opencvWrapCOLOR_RGBA2GRAY,
-  opencvWrapCvtColorFull, opencvWrapEqualizeHist,
-  opencvWrapImread,
-  opencvWrapIntensityTransformGammaCorrection,
-  opencvWrapMat,
-  opencvWrapTHRESH_BINARY,
-  opencvWrapTHRESH_BINARY_INV
-} from "./opencv-wrapper";
+import {OpenCV} from "./opencv";
+
 
 /**
  * Use OpenCV Adaptive Threshold.
@@ -46,10 +37,10 @@ const imageThresholdVariation03 = function (
   let thresholdMethodValue: number;
   switch (thresholdMethod) {
     case 'gaussian':
-      thresholdMethodValue = opencvWrapADAPTIVE_THRESH_GAUSSIAN_C;
+      thresholdMethodValue = OpenCV.ADAPTIVE_THRESH_GAUSSIAN_C;
       break;
     case 'mean':
-      thresholdMethodValue = opencvWrapADAPTIVE_THRESH_MEAN_C;
+      thresholdMethodValue = OpenCV.ADAPTIVE_THRESH_MEAN_C;
       break;
     default:
       throw new Error("Invalid threshold method " + thresholdMethod);
@@ -59,10 +50,10 @@ const imageThresholdVariation03 = function (
   let thresholdTypeValue: number;
   switch (thresholdType) {
     case 'standard':
-      thresholdTypeValue = opencvWrapTHRESH_BINARY;
+      thresholdTypeValue = OpenCV.THRESH_BINARY;
       break;
     case 'inverse':
-      thresholdTypeValue = opencvWrapTHRESH_BINARY_INV;
+      thresholdTypeValue = OpenCV.THRESH_BINARY_INV;
       break;
     default:
       throw new Error("Invalid threshold type " + thresholdType);
@@ -77,23 +68,26 @@ const imageThresholdVariation03 = function (
   // input and output images
 
   // src	source 8-bit single-channel image.
-  const src = opencvWrapImread(imageInput);
+  const src = OpenCV.imread(imageInput);
 
   // dst	destination image of the same size and the same type as src.
-  const dst = opencvWrapMat();
+  const dst = new OpenCV.Mat();
 
   // convert the source image to grayscale
-  opencvWrapCvtColorFull(src, src, opencvWrapCOLOR_RGBA2GRAY, 0);
+  OpenCV.cvtColor(src, src, OpenCV.COLOR_RGBA2GRAY, 0);
 
   // (optional) gamma correction
   const gamma = 1.2;
-  opencvWrapIntensityTransformGammaCorrection(src, src, gamma);
+  OpenCV.intensity_transform.gammaCorrection(src, src, gamma);
 
   // (optional) histogramm equalization
-  opencvWrapEqualizeHist(src, src);
+  OpenCV.equalizeHist(src, src);
 
-  const result = opencvWrapAdaptiveThreshold(src, dst, thresholdValue, thresholdMethodValue, thresholdTypeValue, thresholdBlockSize, thresholdConstant);
-  return result;
+  const result = OpenCV.adaptiveThreshold(src, thresholdValue, thresholdMethodValue, thresholdTypeValue, thresholdBlockSize, thresholdConstant, dst);
+
+  // todo: convert
+
+  return [];
   // cv.imshow('canvasOutput', dst);
   // src.delete();
   // dst.delete();

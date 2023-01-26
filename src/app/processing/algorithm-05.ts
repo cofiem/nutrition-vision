@@ -10,13 +10,8 @@
  * Includes modifications by https://github.com/cofiem
  */
 
-import {
-  opencvWrapCOLOR_BGR2GRAY,
-  opencvWrapCvtColor, opencvWrapDilate, opencvWrapFindContours,
-  opencvWrapGaussianBlur, opencvWrapGetStructuringElement,
-  opencvWrapImread, opencvWrapMORPH_RECT, opencvWrapTHRESH_BINARY_INV, opencvWrapTHRESH_OTSU,
-  opencvWrapThreshold
-} from "./opencv-wrapper";
+
+import {OpenCV, opencvWrapCvtColor} from "./opencv";
 
 /**
  * Calculate the skew angle of text in an image.
@@ -28,30 +23,31 @@ const calculateDeSkewAngleVariation01 = function (
   imageInput: string | HTMLImageElement | HTMLCanvasElement): number {
 
   // create an OpenCV image
-  const image = opencvWrapImread(imageInput);
+  const image = OpenCV.imread(imageInput);
 
   // Convert image to grayscale
-  const gray = opencvWrapCvtColor(image, opencvWrapCOLOR_BGR2GRAY);
+  const gray = opencvWrapCvtColor(image, OpenCV.COLOR_BGR2GRAY);
 
   // apply gaussian blue
-  const blur = opencvWrapGaussianBlur(gray, 9);
+  const blur = OpenCV.gaussianBlur(gray, 9);
 
   // apply threshold
-  const threshold = opencvWrapThreshold(blur, 0, 255, opencvWrapTHRESH_BINARY_INV + opencvWrapTHRESH_OTSU);
+  const threshold = OpenCV.Threshold(blur, 0, 255,
+    OpenCV.THRESH_BINARY_INV + OpenCV.THRESH_OTSU);
 
   // Apply dilation to merge text into meaningful lines/paragraphs.
   // Use larger kernel on X axis to merge characters into single line, cancelling out any spaces.
   // But use smaller kernel on Y axis to separate between different blocks of text
-  const kernel = opencvWrapGetStructuringElement(opencvWrapMORPH_RECT, 30, 5);
+  const kernel = OpenCV.getStructuringElement(OpenCV.MORPH_RECT, 30, 5);
   const dilateIterations = 5;
-  const dilate = opencvWrapDilate(threshold, kernel, dilateIterations);
+  const dilate = OpenCV.Dilate(threshold, kernel, dilateIterations);
 
   // Find all contours
-  const contours = opencvWrapFindContours(dilate);
+  const contours = OpenCV.findContours(dilate);
 
   // Find the largest contour and surround in min area box
   const largestContour = contours[0];
-  const minAreaRect = cv.minAreaRect(largestContour);
+  const minAreaRect = OpenCV.minAreaRect(largestContour);
 
   // Determine the angle. Convert it to the value that was originally used to obtain skewed image
   let angle = minAreaRect[-1]

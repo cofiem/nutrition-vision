@@ -6,13 +6,10 @@
  * Includes modifications by https://github.com/cofiem
  */
 
-import {
-  opencvWrapBORDER_REFLECT,
-  opencvWrapCOLOR_BGR2GRAY,
-  opencvWrapCopyMakeBorder,
-  opencvWrapCvtColor,
-  opencvWrapImread, opencvWrapIntegral
-} from "./opencv-wrapper";
+
+
+
+import {OpenCV, opencvWrapCvtColor} from "./opencv";
 
 /**
  * Apply an adaptive threshold (binarization) to image pixel data.
@@ -29,14 +26,15 @@ const imageThresholdVariation02 = function (
   }
 
   // load the image
-  const image = opencvWrapImread(imageInput);
+  const image = OpenCV.imread(imageInput);
 
   // Convert image to grayscale
-  const gray = opencvWrapCvtColor(image, opencvWrapCOLOR_BGR2GRAY);
+  const gray = opencvWrapCvtColor(image, OpenCV.COLOR_BGR2GRAY);
 
   // Original image size
   let orignrows: number, origncols: number;
-  [orignrows, origncols] = gray.shape
+  orignrows = gray.total(1, 1);
+  origncols = gray.total(2, 2);
 
   // Windows size
   const M = Math.floor(orignrows / 16) + 1;
@@ -48,16 +46,19 @@ const imageThresholdVariation02 = function (
 
   // Padding image
   // _, top, bottom, left, right, borderType
-  const aux = opencvWrapCopyMakeBorder(gray, Mextend, Mextend, Nextend, Nextend, opencvWrapBORDER_REFLECT);
+  const auxDst = new OpenCV.Mat();
+  const aux = OpenCV.copyMakeBorder(gray, Mextend, Mextend, Nextend, Nextend, OpenCV.BORDER_REFLECT, auxDst, undefined);
 
-  const windows: number[][] = new Array(M).fill(0).map(() => new Array(N).fill(0));
+  // .new Array(M).fill(0).map(() => new Array(N).fill(0)
+  const windows = OpenCV.Mat.zeros(M, N, OpenCV.CV_32SC4);
 
   // Image integral calculation
-  const imageIntegral = opencvWrapIntegral(aux, windows, -1);
+  const imageIntegral = OpenCV.integral(aux, windows, -1);
 
   // Integral image size
   let nrows: number, ncols: number;
-  [nrows, ncols] = imageIntegral.shape;
+  nrows = imageIntegral.total(1, 1);
+  ncols = imageIntegral.total(1, 1);
 
   // allocation for cumulative region image
   const result: number[][] = new Array(orignrows).fill(0).map(() => new Array(origncols).fill(0));

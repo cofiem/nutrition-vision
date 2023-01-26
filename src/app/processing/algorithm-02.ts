@@ -47,7 +47,7 @@ const imageThresholdVariation01 = function (pixels: ImageData, threshold: number
         throw new Error("The 'method' must be one of 'luminance', 'average', 'lightness'.");
     }
 
-    const grayscaleValue = (grayscaleMethod < threshold) ? 0 : 1
+    const grayscaleValue = (grayscaleMethod < threshold) ? 0 : 255
 
     // R
     result.push(grayscaleValue);

@@ -18,6 +18,7 @@ import { NotFoundPageComponent } from './not-found-page/not-found-page.component
 import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {MatCardModule} from "@angular/material/card";
 import { ExplainPageComponent } from './explain-page/explain-page.component';
+import { StepCardComponent } from './explain-page/step-card/step-card.component';
 
 @NgModule({
   declarations: [
@@ -27,7 +28,8 @@ import { ExplainPageComponent } from './explain-page/explain-page.component';
     HelpPageComponent,
     AboutPageComponent,
     NotFoundPageComponent,
-    ExplainPageComponent
+    ExplainPageComponent,
+    StepCardComponent
   ],
     imports: [
         BrowserModule,

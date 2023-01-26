@@ -1,0 +1,10 @@
+<mat-card class="step-card">
+  <mat-card-header>
+    <mat-card-title [textContent]="title"></mat-card-title>
+  </mat-card-header>
+  <img mat-card-image [id]="imageId" [alt]="imageAlt" [src]="imageSrc"
+       (load)="imageOnLoad($event)" (error)="imageOnError($event)">
+  <mat-card-footer>
+    <mat-progress-bar [mode]="progressMode" [value]="progressValue"></mat-progress-bar>
+  </mat-card-footer>
+</mat-card>

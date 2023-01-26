@@ -9,23 +9,13 @@
  */
 
 /**
- * Draw and scale an image.
+ * Draw an image to a canvas.
  *
  * @param img The image element.
- * @param limit The scale limit.
  * @returns The results from drawing the image to a canvas.
  */
-const drawAndScaleImage = function (img: HTMLImageElement, limit: number = 256):
+const drawImageToCanvas = function (img: HTMLImageElement):
   { canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, width: number, height: number } {
-
-  // Limit to 256x256px while preserving aspect ratio
-  let [width, height] = [img.width, img.height]
-  // let aspectRatio = w / h
-  // Say the file is 1920x1080
-  // divide max(w,h) by 256 to get factor
-  let factor = Math.max(width, height) / limit
-  width = width / factor
-  height = height / factor
 
   // REMINDER
   // 256x256 = 65536 pixels with 4 channels (RGBA) = 262144 data points for each image
@@ -33,18 +23,18 @@ const drawAndScaleImage = function (img: HTMLImageElement, limit: number = 256):
   // So each images = 262144bytes
   // 1000 images = 260Mb
   let canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = img.width;
+  canvas.height = img.height;
   let ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Cannot get canvas 2d context.");
   ctx.drawImage(img, 0, 0);
 
-  return {canvas: canvas, context: ctx, width: width, height: height};
+  return {canvas: canvas, context: ctx, width: img.width, height: img.height};
 }
 
 
 /**
- * Convert a Blob to a Base64 string.
+ * Convert a Blob (or File) to a Base64 string.
  *
  * @param blob The image binary blob.
  * @returns A promise that resolves to the base64 string.
@@ -59,19 +49,19 @@ const convertBlobToBase64 = function (blob: Blob) {
     img.src = blobUrl;
   }).then((img: any) => {
     URL.revokeObjectURL(blobUrl);
-    let result = drawAndScaleImage(img);
+    let result = drawImageToCanvas(img);
     return result.canvas.toDataURL();
   })
 }
 
 /**
- * Convert a Blob to an ImageData object.
+ * Convert a Blob (or File) to an ImageData object.
  *
  * @param blob The image binary blob.
  * @returns A promise that resolves to the ImageData object.
  */
 const convertBlobToImageData = function (blob: Blob) {
-  let blobUrl = URL.createObjectURL(blob);
+  const blobUrl = URL.createObjectURL(blob);
 
   return new Promise((resolve, reject) => {
     let img = new Image();
@@ -80,8 +70,7 @@ const convertBlobToImageData = function (blob: Blob) {
     img.src = blobUrl;
   }).then((img: any) => {
     URL.revokeObjectURL(blobUrl);
-
-    let result = drawAndScaleImage(img);
+    const result = drawImageToCanvas(img);
 
     // some browsers synchronously decode image here
     return result.context.getImageData(0, 0, result.width, result.height);
@@ -94,7 +83,7 @@ const convertBlobToImageData = function (blob: Blob) {
  * @param imageData The image data object.
  * @returns A promise that resolves to the binary Blob.
  */
-const convertImageDataToBlob = function (imageData: ImageData) {
+const convertImageDataToBlob = function (imageData: ImageData): Promise<Blob | null> {
   let w = imageData.width;
   let h = imageData.height;
   let canvas = document.createElement("canvas");
@@ -129,7 +118,7 @@ const convertObjectURLToBlob = function (url: string) {
 }
 
 /**
- * Convert a Blob to an Object Url.
+ * Convert a Blob (or File) to an Object Url.
  *
  * @param blob The image binary blob.
  * @returns A promise that resolves to the Object Url.
@@ -145,7 +134,7 @@ const convertBlobToObjectURL = function (blob: Blob): Promise<string> {
 }
 
 export {
-  drawAndScaleImage,
+  drawImageToCanvas,
   convertBlobToBase64,
   convertBlobToImageData,
   convertImageDataToBlob,

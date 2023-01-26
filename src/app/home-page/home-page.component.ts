@@ -1,6 +1,6 @@
 import {Component} from '@angular/core';
 import {ProcessingService} from "../processing/processing.service";
-import {convertUploadToFile} from "../processing/conversions-01";
+import {convertUploadToImageFile} from "../processing/conversions-01";
 
 @Component({
   selector: 'app-home-page',
@@ -20,7 +20,7 @@ export class HomePageComponent {
     // get the selected file
     const inputNode: any = document.querySelector('#file');
 
-    const inputFile = convertUploadToFile(inputNode);
+    const inputFile = convertUploadToImageFile(inputNode);
 
     // show preview of selected file
     const imageOriginal: any = document.querySelector('#previewImageOriginal');
