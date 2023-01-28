@@ -1,5 +1,3 @@
-import {drawImageToCanvas} from "./conversions-02";
-import {ProgressBarMode} from "@angular/material/progress-bar";
 import {DomSanitizer, SafeUrl} from "@angular/platform-browser";
 
 /**
@@ -140,19 +138,6 @@ const convertBlobToSafeUrl = function (blob: Blob, sanitizer: DomSanitizer): { s
   return {srcUrl: result, objectUrl: objUrl};
 }
 
-interface StepCard {
-
-  title: string
-  imageId: string
-  imageAlt: string
-  imageSrc: SafeUrl
-  progressMode: ProgressBarMode
-  progressValue: number,
-  imageLoadFunc: (event: Event) => void,
-  imageErrorFunc: (event: Event) => void,
-
-}
-
 export {
   convertImageToImageData,
   convertImageDataToImage,
@@ -160,6 +145,5 @@ export {
   convertUploadToImageFile,
   convertBlobToImage,
   convertBlobToImageSrc,
-  convertBlobToSafeUrl,
-  StepCard
+  convertBlobToSafeUrl
 }

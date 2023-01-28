@@ -100,44 +100,10 @@ const convertImageDataToBlob = function (imageData: ImageData): Promise<Blob | n
   })
 }
 
-/**
- * Convert a url to a Blob.
- *
- * @param url The image url.
- * @returns A promise that resolves to the binary Blob.
- */
-const convertObjectURLToBlob = function (url: string) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      let blob = await fetch(url)
-      resolve(blob)
-    } catch (err) {
-      reject(err)
-    }
-  })
-}
-
-/**
- * Convert a Blob (or File) to an Object Url.
- *
- * @param blob The image binary blob.
- * @returns A promise that resolves to the Object Url.
- */
-const convertBlobToObjectURL = function (blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    try {
-      resolve(URL.createObjectURL(blob))
-    } catch (err) {
-      reject(err)
-    }
-  })
-}
 
 export {
   drawImageToCanvas,
   convertBlobToBase64,
   convertBlobToImageData,
   convertImageDataToBlob,
-  convertObjectURLToBlob,
-  convertBlobToObjectURL,
 }

@@ -1,5 +1,11 @@
-import {OpenCV} from "./opencv";
+import {
+  OpenCVADAPTIVE_THRESH_GAUSSIAN_C, OpenCVADAPTIVE_THRESH_MEAN_C, OpenCVadaptiveThreshold,
+  OpenCVCOLOR_RGBA2GRAY, OpenCVcvtColor, OpenCVEqualizeHist,
+  OpenCVimread, OpenCVintensityTransformGammaCorrection,
+  OpenCVTHRESH_BINARY, OpenCVTHRESH_BINARY_INV
+} from "./opencv";
 
+const logPrefix = "imageThresholdAdaptive01";
 
 /**
  * Use OpenCV Adaptive Threshold.
@@ -17,7 +23,7 @@ import {OpenCV} from "./opencv";
  * @param thresholdConstant The constant subtracted from the mean or weighted mean. Usually positive, but may be zero or negative.
  * @returns The thresholded image as
  */
-const imageThresholdVariation03 = function (
+const imageThresholdAdaptive01 = function (
   imageInput: string | HTMLImageElement | HTMLCanvasElement,
   thresholdValue: number = 0, thresholdMethod: string = 'gaussian',
   thresholdType: string = 'standard', thresholdBlockSize: number = 11,
@@ -37,10 +43,10 @@ const imageThresholdVariation03 = function (
   let thresholdMethodValue: number;
   switch (thresholdMethod) {
     case 'gaussian':
-      thresholdMethodValue = OpenCV.ADAPTIVE_THRESH_GAUSSIAN_C;
+      thresholdMethodValue = OpenCVADAPTIVE_THRESH_GAUSSIAN_C();
       break;
     case 'mean':
-      thresholdMethodValue = OpenCV.ADAPTIVE_THRESH_MEAN_C;
+      thresholdMethodValue = OpenCVADAPTIVE_THRESH_MEAN_C();
       break;
     default:
       throw new Error("Invalid threshold method " + thresholdMethod);
@@ -50,10 +56,10 @@ const imageThresholdVariation03 = function (
   let thresholdTypeValue: number;
   switch (thresholdType) {
     case 'standard':
-      thresholdTypeValue = OpenCV.THRESH_BINARY;
+      thresholdTypeValue = OpenCVTHRESH_BINARY();
       break;
     case 'inverse':
-      thresholdTypeValue = OpenCV.THRESH_BINARY_INV;
+      thresholdTypeValue = OpenCVTHRESH_BINARY_INV();
       break;
     default:
       throw new Error("Invalid threshold type " + thresholdType);
@@ -68,22 +74,19 @@ const imageThresholdVariation03 = function (
   // input and output images
 
   // src	source 8-bit single-channel image.
-  const src = OpenCV.imread(imageInput);
-
-  // dst	destination image of the same size and the same type as src.
-  const dst = new OpenCV.Mat();
+  const originalMat = OpenCVimread(imageInput);
 
   // convert the source image to grayscale
-  OpenCV.cvtColor(src, src, OpenCV.COLOR_RGBA2GRAY, 0);
+  const grayMat = OpenCVcvtColor(originalMat, OpenCVCOLOR_RGBA2GRAY());
 
   // (optional) gamma correction
   const gamma = 1.2;
-  OpenCV.intensity_transform.gammaCorrection(src, src, gamma);
+  const gammaMat = OpenCVintensityTransformGammaCorrection(grayMat, gamma);
 
   // (optional) histogramm equalization
-  OpenCV.equalizeHist(src, src);
+  const equalisedMat = OpenCVEqualizeHist(grayMat);
 
-  const result = OpenCV.adaptiveThreshold(src, thresholdValue, thresholdMethodValue, thresholdTypeValue, thresholdBlockSize, thresholdConstant, dst);
+  const result = OpenCVadaptiveThreshold(grayMat, thresholdValue, thresholdMethodValue, thresholdTypeValue, thresholdBlockSize, thresholdConstant);
 
   // todo: convert
 
@@ -122,9 +125,4 @@ const imageDeSkewVariation03 = function () {
   // todo: https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate
 }
 
-export {
-  imageDeSkewVariation01,
-  imageDeSkewVariation02,
-  imageDeSkewVariation03,
-  imageThresholdVariation03
-}
+export default imageThresholdAdaptive01;

@@ -11,7 +11,15 @@
  */
 
 
-import {OpenCV, opencvWrapCvtColor} from "./opencv";
+import {
+  OpenCVCOLOR_BGR2GRAY,
+  OpenCVcvtColor, OpenCVDilate, OpenCVfindContours, OpenCVgaussianBlur, OpenCVgetStructuringElement,
+  OpenCVimread, OpenCVminAreaRect, OpenCVMORPH_RECT,
+  openCVSetPixelGray,
+  OpenCVTHRESH_BINARY_INV, OpenCVTHRESH_OTSU, OpenCVThreshold
+} from "./opencv";
+
+const logPrefix = "imageSkewAngle01";
 
 /**
  * Calculate the skew angle of text in an image.
@@ -19,35 +27,35 @@ import {OpenCV, opencvWrapCvtColor} from "./opencv";
  * @param imageInput The image image.
  * @returns The calculated skew angle.
  */
-const calculateDeSkewAngleVariation01 = function (
+const imageSkewAngle01 = function (
   imageInput: string | HTMLImageElement | HTMLCanvasElement): number {
 
   // create an OpenCV image
-  const image = OpenCV.imread(imageInput);
+  const image = OpenCVimread(imageInput);
 
   // Convert image to grayscale
-  const gray = opencvWrapCvtColor(image, OpenCV.COLOR_BGR2GRAY);
+  const gray = OpenCVcvtColor(image, OpenCVCOLOR_BGR2GRAY());
 
   // apply gaussian blue
-  const blur = OpenCV.gaussianBlur(gray, 9);
+  const blur = OpenCVgaussianBlur(gray, 9);
 
   // apply threshold
-  const threshold = OpenCV.Threshold(blur, 0, 255,
-    OpenCV.THRESH_BINARY_INV + OpenCV.THRESH_OTSU);
+  const threshold = OpenCVThreshold(blur, 0, 255,
+    OpenCVTHRESH_BINARY_INV() + OpenCVTHRESH_OTSU());
 
   // Apply dilation to merge text into meaningful lines/paragraphs.
   // Use larger kernel on X axis to merge characters into single line, cancelling out any spaces.
   // But use smaller kernel on Y axis to separate between different blocks of text
-  const kernel = OpenCV.getStructuringElement(OpenCV.MORPH_RECT, 30, 5);
+  const kernel = OpenCVgetStructuringElement(OpenCVMORPH_RECT(), 30, 5);
   const dilateIterations = 5;
-  const dilate = OpenCV.Dilate(threshold, kernel, dilateIterations);
+  const dilate = OpenCVDilate(threshold, kernel, dilateIterations);
 
   // Find all contours
-  const contours = OpenCV.findContours(dilate);
+  const contours = OpenCVfindContours(dilate);
 
   // Find the largest contour and surround in min area box
   const largestContour = contours[0];
-  const minAreaRect = OpenCV.minAreaRect(largestContour);
+  const minAreaRect = OpenCVminAreaRect(largestContour);
 
   // Determine the angle. Convert it to the value that was originally used to obtain skewed image
   let angle = minAreaRect[-1]
@@ -79,6 +87,4 @@ const calculateDeSkewAngleVariation01 = function (
   return skew;
 }
 
-export {
-  calculateDeSkewAngleVariation01
-}
+export default imageSkewAngle01;

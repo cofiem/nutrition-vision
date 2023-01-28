@@ -307,15 +307,15 @@ declare class OpenCV {
 
   // added
 
-  static cvtColor(src: OpenCV.Mat, dst: OpenCV.Mat, code: number, dstCn: number): OpenCV.Mat;
+  static cvtColor(src: OpenCV.Mat, dst: OpenCV.Mat, code: number, dstCn?: number | undefined): void;
 
   static adaptiveThreshold(src: OpenCV.Mat, maxValue: number, adaptiveMethod: number, thresholdType: number, blockSize: number, C: number, dst: OpenCV.Mat): OpenCV.Mat;
 
   static equalizeHist(src: OpenCV.Mat, dst: OpenCV.Mat): OpenCV.Mat;
 
-  static copyMakeBorder(src: OpenCV.Mat, top: number, bottom: number, left: number, right: number, borderType: number, dst: OpenCV.Mat, value: OpenCV.Scalar | undefined): OpenCV.Mat
+  static copyMakeBorder(src: OpenCV.Mat, dst: OpenCV.Mat, top: number, bottom: number, left: number, right: number, borderType: number, value: OpenCV.Scalar | undefined): void
 
-  static integral(src: OpenCV.Mat, sum: OpenCV.Mat, sdepth: number): OpenCV.Mat;
+  static integral(src: OpenCV.Mat, sum: OpenCV.Mat, sdepth: number): void;
 
 }
 

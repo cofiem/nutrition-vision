@@ -1,6 +1,9 @@
 import {createWorker, RecognizeOptions, RecognizeResult, Rectangle} from "tesseract.js";
 import {fromEvent} from "rxjs";
-import * as Tesseract from "tesseract.js";
+import Logger from "../../logger/logger";
+
+
+const tesseractLogPrefix: string = "Tesseract";
 
 /**
  * Create a new Tesseract worker.
@@ -12,12 +15,13 @@ import * as Tesseract from "tesseract.js";
 const createTesseractWorker = async function (
   infoHandler?: (arg: any) => void,
   errorHandler?: (arg: any) => void) {
+  const logger = new Logger();
   const tesseractWorker = await createWorker({
     logger: infoHandler || function (arg) {
-      console.info(arg);
+      logger.info(tesseractLogPrefix, "Worker log: " + JSON.stringify(arg));
     },
     errorHandler: errorHandler || function (arg) {
-      console.error(arg);
+      logger.error(tesseractLogPrefix, "Worker error: " + JSON.stringify(arg));
     },
   });
   await tesseractWorker.loadLanguage("eng");
@@ -27,11 +31,13 @@ const createTesseractWorker = async function (
 
   browserBeforeUnload.subscribe({
     next: async function (v) {
-      console.info(v);
+      logger.info(tesseractLogPrefix, "BeforeUnload log: " + JSON.stringify(v));
       if (tesseractWorker) {
         await tesseractWorker.terminate();
       }
-    }, error: console.error
+    }, error: (arg) => {
+      logger.error(tesseractLogPrefix, "BeforeUnload error: " + JSON.stringify(arg));
+    }
   });
   return tesseractWorker;
 }
@@ -54,14 +60,15 @@ const executeTesseractRecognize = async function (
     throw new Error("Must provider worker and image.");
   }
 
+  const logger = new Logger();
   const options: Partial<RecognizeOptions> = {rotateAuto: true};
 
   if (rect) {
-    console.log("Init tesseract using rectangle  " + JSON.stringify(rect) + ".");
+    logger.log(tesseractLogPrefix, "Init tesseract using rectangle  " + JSON.stringify(rect) + ".");
     options.rectangle = rect;
   }
 
-  console.log("Started tesseract recognise for image.");
+  logger.log(tesseractLogPrefix, "Started tesseract recognise for image.");
 
   const result = await worker.recognize(image, {rotateAuto: true}, {
     osd: true, text: true, blocks: true,
@@ -71,7 +78,7 @@ const executeTesseractRecognize = async function (
     hocr: false, box: false,
   });
 
-  console.log("Finished tesseract recognise.");
+  logger.log(tesseractLogPrefix, "Finished tesseract recognise.");
 
   return result;
 }

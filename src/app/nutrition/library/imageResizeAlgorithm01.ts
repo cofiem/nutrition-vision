@@ -6,6 +6,10 @@
  * Includes modifications by https://github.com/cofiem
  */
 
+import Logger from "../../logger/logger";
+
+const logPrefix = "imageResizeAlgorithm01";
+
 /**
  * Resize an image.
  *
@@ -14,10 +18,12 @@
  * @param targetHeight The target image height.
  * @returns The image data for the resized image.
  */
-const imageResizeVariation01 = function (image: HTMLImageElement, targetWidth: number, targetHeight: number): ImageData {
+const imageResizeAlgorithm01 = function (image: HTMLImageElement, targetWidth: number, targetHeight: number): ImageData {
   if (!targetWidth || targetWidth < 1 || !targetHeight || targetHeight < 1) {
     throw new Error("Width and height must be greater than 0.");
   }
+
+  const logger = new Logger();
 
 // Make sure the width and height preserve the original aspect ratio and adjust if needed
   let width: number = targetWidth;
@@ -26,7 +32,7 @@ const imageResizeVariation01 = function (image: HTMLImageElement, targetWidth: n
     const value = targetHeight * (image.width / image.height);
     width = Math.floor(value);
   } else {
-    console.log(JSON.stringify({
+    logger.log(logPrefix, JSON.stringify({
       targetWidth: targetWidth,
       imageHeight: image.height,
       imageWidth: image.width,
@@ -96,6 +102,5 @@ const imageResizeVariation01 = function (image: HTMLImageElement, targetWidth: n
   return result;
 }
 
-export {
-  imageResizeVariation01
-}
+export default imageResizeAlgorithm01;
+

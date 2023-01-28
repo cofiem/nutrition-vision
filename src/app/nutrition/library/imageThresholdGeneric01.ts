@@ -10,6 +10,8 @@
  * Includes modifications by https://github.com/cofiem
  */
 
+const logPrefix = "imageThresholdGeneric01";
+
 /**
  * Apply a threshold (binarization) to image pixel data.
  *
@@ -18,7 +20,7 @@
  * @param method The threshold method to use.
  * @returns A one dimensional array of image pixel data with the threshold applied.
  */
-const imageThresholdVariation01 = function (pixels: ImageData, threshold: number = 127, method: string = 'luminance'): Uint8ClampedArray {
+const imageThresholdGeneric01 = function (pixels: ImageData, threshold: number = 127, method: string = 'luminance'): Uint8ClampedArray {
   if (threshold < 0 || threshold > 255) {
     throw new Error("Threshold value must be between 0 and 255.");
   }
@@ -62,6 +64,4 @@ const imageThresholdVariation01 = function (pixels: ImageData, threshold: number
   return new Uint8ClampedArray(result);
 }
 
-export {
-  imageThresholdVariation01
-}
+export default imageThresholdGeneric01;
