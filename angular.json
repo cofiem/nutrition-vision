@@ -34,11 +34,17 @@
               "src/styles.scss"
             ],
             "scripts": [
-              "src/assets/js/opencv.js"
+              {
+                "input":"src/assets/js/opencv.js",
+                "bundleName": "opencv-script",
+                "inject": false
+              },
+
             ],
             "allowedCommonJsDependencies": [
               "tesseract.js",
-              "browser-image-resizer"
+              "browser-image-resizer",
+              "@honeybadger-io/js"
             ],
             "webWorkerTsConfig": "tsconfig.worker.json"
           },

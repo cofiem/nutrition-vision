@@ -1,5 +1,19 @@
 # Contributing
 
+<!-- TOC -->
+* [Contributing](#contributing)
+  * [This is an Angular app](#this-is-an-angular-app)
+    * [Development server](#development-server)
+    * [Code scaffolding](#code-scaffolding)
+    * [Build](#build)
+    * [Running unit tests](#running-unit-tests)
+    * [Running end-to-end tests](#running-end-to-end-tests)
+    * [Further help](#further-help)
+  * [Check for circular dependencies](#check-for-circular-dependencies)
+  * [Tesseract.js](#tesseractjs)
+  * [OpenCV.js](#opencvjs)
+<!-- TOC -->
+
 ## This is an Angular app
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 15.1.2.
@@ -28,7 +42,17 @@ Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To u
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
 
+## Check for circular dependencies
+
+Use `npx dpdm ./src/main.ts` to check for circular dependencies.
+
+
 ## Tesseract.js
 
 This project uses [tesseract.js](https://tesseract.projectnaptha.com/).
+
+
+## OpenCV.js
+
+This project uses [OpenCV.js](https://docs.opencv.org/4.7.0/d5/d10/tutorial_js_root.html).
 
