@@ -1,0 +1,7 @@
+---
+nodejs_ubuntu_gpg_url: 'https://deb.nodesource.com/gpgkey/nodesource.gpg.key'
+nodejs_ubuntu_gpg_text_path: '/tmp/nodejs-archive-keyring.gpg'
+nodejs_ubuntu_gpg_keyring_path: '/usr/share/keyrings/nodejs-archive-keyring.gpg'
+nodejs_ubuntu_apt_url: 'https://deb.nodesource.com/node_18.x'
+nodejs_ubuntu_apt_arch: 'amd64'  # {{ ansible_architecture | lower }} - this gives 'x86_64', which is not valid
+nodejs_ubuntu_apt_dist: '{{ ansible_distribution_release | lower }}'

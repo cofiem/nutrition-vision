@@ -1,0 +1,49 @@
+---
+# Install nodejs by following: https://github.com/nodesource/distributions/blob/master/README.md#manual-installation
+
+- name: Install required packages
+  become_user: 'root'
+  ansible.builtin.apt:
+    name:
+      - 'ca-certificates'
+      - 'curl'
+      - 'gnupg'
+      - 'lsb-release'
+    state: 'latest'
+
+- name: Get nodejs apt repo gpg key
+  become_user: 'root'
+  ansible.builtin.get_url:
+    url: '{{ nodejs_ubuntu_gpg_url }}'
+    dest: '{{ nodejs_ubuntu_gpg_text_path }}'
+    mode: 'u=rw,g=r,o=r'
+
+- name: Add nodejs apt repo gpg key
+  become_user: 'root'
+  ansible.builtin.command:
+    cmd: 'gpg --dearmor --output {{ nodejs_ubuntu_gpg_keyring_path }} {{ nodejs_ubuntu_gpg_text_path }}'
+    creates: '{{ nodejs_ubuntu_gpg_keyring_path }}'
+
+- name: Add nodejs apt repo source file
+  become_user: 'root'
+  ansible.builtin.template:
+    src: 'nodejs.list'
+    dest: '/etc/apt/sources.list.d/nodejs.list'
+    owner: 'root'
+    group: 'root'
+    mode: 'u=rw,g=r,o=r'
+
+- name: Update apt cache
+  become_user: 'root'
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install nodejs packages
+  become_user: 'root'
+  ansible.builtin.apt:
+    name:
+      - 'nodejs'
+    state: 'latest'
+    update_cache: true
+    autoclean: true
+    autoremove: true

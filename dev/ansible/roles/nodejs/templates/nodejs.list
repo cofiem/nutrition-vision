@@ -1,0 +1,4 @@
+# {{ ansible_managed }}
+# NodeJS Ubuntu apt repo
+
+deb [arch={{ nodejs_ubuntu_apt_arch }} signed-by={{ nodejs_ubuntu_gpg_keyring_path }}] {{ nodejs_ubuntu_apt_url }} {{ nodejs_ubuntu_apt_dist }} main
