@@ -10,7 +10,7 @@ import {ImageLike, RecognizeResult, Rectangle, Worker} from "tesseract.js";
 import {createTesseractWorker, executeTesseractRecognize} from "./tesseract";
 import {initOpenCV, OpenCVgetBuildInformation} from "./opencv";
 
-import {convertBlobToSafeUrl, convertImageDataToImage, convertTwoDimArrayToImageData} from "./conversions-01";
+import {convertBlobToSafeUrl, convertImageDataToImage} from "./conversions-01";
 import {convertImageDataToBlob} from "./conversions-02";
 import imageResizeAlgorithm01 from "./imageResizeAlgorithm01";
 import imageThresholdGeneric01 from "./imageThresholdGeneric01";
@@ -131,12 +131,12 @@ export class ProcessingService {
         progressMode: 'determinate' as ProgressBarMode,
         progressValue: 0,
         imageLoadFunc: (event: Event) => {
-          this.logger.info(this.logPrefix, "Image resize successful.");
+          this.logger.info(this.logPrefix, "Image imageResize01 successful.");
           this.logger.info(this.logPrefix, "Revoke object url.");
           URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
         },
         imageErrorFunc: (event: Event) => {
-          this.logger.error(this.logPrefix, "Image resize error.");
+          this.logger.error(this.logPrefix, "Image imageResize01 error.");
           this.logger.error(this.logPrefix, "Revoke object url.");
           URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
         },
@@ -174,12 +174,12 @@ export class ProcessingService {
         progressMode: 'determinate' as ProgressBarMode,
         progressValue: 0,
         imageLoadFunc: (event: Event) => {
-          this.logger.info(this.logPrefix, "Image threshold variation 01 successful.");
+          this.logger.info(this.logPrefix, "Image imageThresholdGeneric01 successful.");
           this.logger.info(this.logPrefix, "Revoke object url.");
           URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
         },
         imageErrorFunc: (event: Event) => {
-          this.logger.info(this.logPrefix, "Image threshold variation 01 error.");
+          this.logger.info(this.logPrefix, "Image imageThresholdGeneric01 error.");
           this.logger.info(this.logPrefix, "Revoke object url.");
           URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
         },
@@ -202,8 +202,9 @@ export class ProcessingService {
 
   async imageThresholdAdaptive01(imageOriginal: string | HTMLImageElement | HTMLCanvasElement): Promise<ProcessingOutput> {
     this.logger.info(this.logPrefix, "Start imageThresholdAdaptive01.");
-    const imageTwoDimArrayProcessed = imageThresholdAdaptive01(imageOriginal);
-    const imageDataProcessed = convertTwoDimArrayToImageData(imageTwoDimArrayProcessed);
+    const imageDataProcessed = imageThresholdAdaptive01(
+      imageOriginal, 255, 'gamma', 'gaussian',
+      'standard', 255, 19);
     const blobProcessed = await convertImageDataToBlob(imageDataProcessed);
 
     if (blobProcessed) {
@@ -217,12 +218,12 @@ export class ProcessingService {
         progressMode: 'determinate' as ProgressBarMode,
         progressValue: 0,
         imageLoadFunc: (event: Event) => {
-          this.logger.info(this.logPrefix, "Image threshold adaptive variation 01 successful.");
+          this.logger.info(this.logPrefix, "Image imageThresholdAdaptive01 successful.");
           this.logger.info(this.logPrefix, "Revoke object url.");
           URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
         },
         imageErrorFunc: (event: Event) => {
-          this.logger.info(this.logPrefix, "Image threshold adaptive variation 01 error.");
+          this.logger.info(this.logPrefix, "Image imageThresholdAdaptive01 error.");
           this.logger.info(this.logPrefix, "Revoke object url.");
           URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
         },
@@ -244,9 +245,44 @@ export class ProcessingService {
   }
 
   async imageThresholdAdaptive02(imageOriginal: string | HTMLImageElement | HTMLCanvasElement) {
-    this.logger.info(this.logPrefix, "Start threshold image variation 03.");
-    const imageTwoDimArrayProcessed = imageThresholdAdaptive02(imageOriginal);
-    const imageDataProcessed = convertTwoDimArrayToImageData(imageTwoDimArrayProcessed);
+    this.logger.info(this.logPrefix, "Start imageThresholdAdaptive02.");
+    const imageDataProcessed = imageThresholdAdaptive02(imageOriginal);
     const blobProcessed = await convertImageDataToBlob(imageDataProcessed);
+
+    if (blobProcessed) {
+      const objectUrlCheckedProcessed = convertBlobToSafeUrl(blobProcessed, this.sanitizer);
+
+      const stepCard = {
+        title: 'Threshold adaptive image - option 2',
+        imageId: 'imageThresholdAdaptive02',
+        imageAlt: "Preview of image threshold adaptive 2",
+        imageSrc: objectUrlCheckedProcessed.srcUrl,
+        progressMode: 'determinate' as ProgressBarMode,
+        progressValue: 0,
+        imageLoadFunc: (event: Event) => {
+          this.logger.info(this.logPrefix, "Image imageThresholdAdaptive02 successful.");
+          this.logger.info(this.logPrefix, "Revoke object url.");
+          URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
+        },
+        imageErrorFunc: (event: Event) => {
+          this.logger.info(this.logPrefix, "Image imageThresholdAdaptive02 error.");
+          this.logger.info(this.logPrefix, "Revoke object url.");
+          URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
+        },
+      };
+      return new ProcessingOutput(
+        imageDataProcessed,
+        blobProcessed,
+        convertImageDataToImage(imageDataProcessed),
+        stepCard
+      );
+    } else {
+      return new ProcessingOutput(
+        imageDataProcessed,
+        undefined,
+        convertImageDataToImage(imageDataProcessed),
+        undefined
+      );
+    }
   }
 }

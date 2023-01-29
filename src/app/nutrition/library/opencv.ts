@@ -1,4 +1,7 @@
-import {isDevMode} from "@angular/core";
+import Logger from "../../logger/logger";
+
+const logger = new Logger();
+const logPrefix = "OpenCV Wrapper";
 
 declare var cv: any;
 
@@ -10,16 +13,18 @@ const initOpenCV = function (): boolean {
   let isInitDone = false;
   while (!isInitDone) {
     if (!cv) {
+      logger.debug(logPrefix, "Cannot access 'cv' yet.");
       continue;
     }
     if (cv['calledRun'] === true) {
+      logger.debug(logPrefix, "Variable 'cv' is ready.");
       isInitDone = true;
     }
   }
 
   // ensure all required object properties / methods are available
   if (isInitDone) {
-    const expected = [
+    const expected = new Set([
       'ADAPTIVE_THRESH_GAUSSIAN_C',
       'ADAPTIVE_THRESH_MEAN_C',
       'adaptiveThreshold',
@@ -38,8 +43,8 @@ const initOpenCV = function (): boolean {
       'getBuildInformation',
       'getStructuringElement',
       'imread',
+      'imshow',
       'integral',
-      // 'intensity_transform',
       'Mat',
       'minAreaRect',
       'MORPH_RECT',
@@ -49,12 +54,15 @@ const initOpenCV = function (): boolean {
       'THRESH_BINARY_INV',
       'THRESH_OTSU',
       'threshold',
-    ];
+
+      // not available:
+      // 'intensity_transform',
+    ]);
     const notFound: string[] = [];
 
     expected.forEach((item) => {
       const itemValue = cv[item];
-      if (cv[item] === undefined && notFound.indexOf(item) < 0) {
+      if (itemValue === undefined && notFound.indexOf(item) < 0) {
         notFound.push(item);
       }
     });
@@ -66,155 +74,204 @@ const initOpenCV = function (): boolean {
   return isInitDone;
 }
 
+const OpenCVNewMat = function(rows: number, cols: number, type: string): any {
+  return new cv.Mat(rows, cols, type);
+}
 
-const openCVSetPixelGray = function (mat: any, row: number, col: number, value: number): void {
+const OpenCVSetMatPixels = function (
+  mat: any,
+  valueFunc: (row: number, col: number, item: string, index: number, data: number[], currentValue: number) => number
+): void {
   if (!mat.isContinuous()) {
-    throw new Error("The Mat provided to openCVSetPixelGray is not continuous.");
+    throw new Error("The Mat is not continuous.");
   }
-  const channels = mat.channels();
-  // R
-  mat.data[row * mat.cols * channels + col * channels] = value;
-  // G
-  mat.data[row * mat.cols * channels + col * channels + 1] = value;
-  // B
-  mat.data[row * mat.cols * channels + col * channels + 2] = value;
-  // A
-  //mat.data[row * mat.cols * channels + col * channels + 3];
+  const data = mat.data;
+  const rows = mat.rows;
+  const cols = mat.cols;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const index = OpenCVGetMatIndex(mat, row, col);
+
+      // red
+      const rIndex = index;
+      const rValue = data[rIndex];
+      data[rIndex] = valueFunc(row, col, 'red', index, data, rValue);
+
+      // green
+      const gIndex = index + 1;
+      const gValue = data[gIndex];
+      data[gIndex] = valueFunc(row, col, 'green', index, data, gValue);
+
+      // blue
+      const bIndex = index + 2;
+      const bValue = data[bIndex];
+      data[bIndex] = valueFunc(row, col, 'blue', index, data, bValue);
+
+      // alpha
+      const aIndex = index + 3;
+      const aValue = data[aIndex];
+      data[aIndex] = valueFunc(row, col, 'alpha', index, data, aValue);
+
+    }
+  }
 }
 
-const OpenCVimread = function (source: string | HTMLCanvasElement | HTMLImageElement) {
-  return cv.imread(source);
+const OpenCVGetMatIndex = function(mat: any, row: number, col: number): number {
+  const ch = mat.channels();
+  const cols = mat.cols;
+  return row * cols * ch + col * ch;
 }
 
-const OpenCVcvtColor = function (source: any, code: number): any {
-  // TODO: ensure mat delete
-  const dst = new cv.Mat();
-  const out = cv.cvtColor(source, dst, code, 0);
+const OpenCVimread = function (image: string | HTMLCanvasElement | HTMLImageElement): any {
+  logger.debug(logPrefix, "Converting image into OpenCV Mat format");
+  const out = cv.imread(image);
+  logger.debug(logPrefix, "Converted image into OpenCV Mat format");
+  return out;
+}
+
+const OpenCVimshow = function (mat: any): ImageData {
+  logger.debug(logPrefix, "Converting OpenCV Mat format into image.");
+  const size = mat.size();
+  let canvas = document.createElement("canvas");
+  canvas.width = size.width;
+  canvas.height = size.height;
+  const out = cv.imshow(canvas, mat);
+  if (out !== undefined) {
+    throw new Error("Unexpected return value from cv.imshow: " + JSON.stringify(out));
+  }
+
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Cannot get canvas 2d context.");
+
+  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+  logger.debug(logPrefix, "Converted OpenCV Mat format into image.");
+
+  return imageData;
+}
+
+const OpenCVcvtColor = function (mat: any, code: number): void {
+  logger.debug(logPrefix, "Converting OpenCV Mat instance to cvt color code '" + code + "'.");
+  const out = cv.cvtColor(mat, mat, code, 0);
   if (out !== undefined) {
     throw new Error("Unexpected return value from cv.cvtColor: " + JSON.stringify(out));
   }
-  return dst;
+  logger.debug(logPrefix, "Converted OpenCV Mat instance to cvt color code '" + code + "'.");
 }
 
-const OpenCVMat = function (): any {
-  // TODO: ensure mat delete
-  return cv.Mat();
-}
+// const OpenCVMatZeros = function (width: number, height: number, type: number): any {
+//   return cv.Mat.zeros(width, height, type);
+// }
 
-const OpenCVMatZeros = function (width: number, height: number, type: number): any {
-  // TODO: ensure mat delete
-  return cv.Mat.zeros(width, height, type);
-}
+const OpenCVintensityTransformGammaCorrection = function (mat: any, gamma: number): void {
+  logger.debug(logPrefix, "Converting OpenCV Mat instance gamma '" + gamma + "'.");
 
-const OpenCVintensityTransformGammaCorrection = function (source: any, gamma: number) {
-  // TODO: ensure mat delete
-  const dst = new cv.Mat();
-  if (source.isContinuous()) {
-    const data = source.data;
-    const rows = source.rows;
-    const cols = source.cols;
-    const ch = source.channels();
-
-    const gammaFunc = (value: number) => (Math.pow((value / 255.0), gamma) * 255.0);
-
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        const index = row * cols * ch + col * ch;
-
-        const rIndex = index;
-        const rValue = data[rIndex];
-        data[rIndex] = gammaFunc(rValue);
-
-        const gIndex = index + 1;
-        const gValue = data[gIndex];
-        data[gIndex] = gammaFunc(gValue);
-
-        let bIndex = index + 2;
-        let bValue = data[bIndex];
-        data[bIndex] = gammaFunc(bValue);
-
-        // let A = data[index + 3];
-
-      }
+  const items = ['red', 'green', 'blue'];
+  const gammaFunc = (row: number, col: number, item: string, index: number, data: number[], currentValue: number) => {
+    if (items.indexOf(item) > -1) {
+      return Math.pow((currentValue / 255.0), gamma) * 255.0;
+    } else {
+      return currentValue;
     }
+  };
+  OpenCVSetMatPixels(mat, gammaFunc);
+
+  logger.debug(logPrefix, "Converted OpenCV Mat instance gamma '" + gamma + "'.");
+}
+
+const OpenCVgaussianBlur = function (mat: any, size: any): void {
+  logger.debug(logPrefix, "Converting OpenCV Mat instance using gaussian blur '" + size + "'.");
+  const out = cv.GaussianBlur(mat, new cv.Size(size, size), 0);
+  if (out !== undefined) {
+    throw new Error("Unexpected return value from cv.GaussianBlur: " + JSON.stringify(out));
   }
-  return dst;
+  logger.debug(logPrefix, "Converted OpenCV Mat instance using gaussian blur '" + size + "'.");
 }
 
+const OpenCVcopyMakeBorder = function (image: any, top: any, bottom: any, left: any, right: any, borderType: any, value: number | undefined = undefined): any {
+  logger.debug(logPrefix, "Converting OpenCV Mat instance using copy make boarder '" + borderType + "'.");
+  const result = new cv.Mat(image.rows + top + bottom, image.cols + left + right, image.type());
 
-const OpenCVCvtColor = function (src: any, code: number): any {
-  const dst = new cv.Mat();
-  cv.cvtColor(src, dst, code, 0);
-  return dst;
-}
-
-const OpenCVgaussianBlur = function (image: any, size: any): any {
-
-  return cv.GaussianBlur(image, new cv.Size(size, size), 0);
-}
-
-const OpenCVcopyMakeBorder = function (image: any, top: any, bottom: any, left: any, right: any, borderType: any): any {
-  const out = cv.copyMakeBorder(image, top, bottom, left, right, borderType);
+  const out = value === undefined
+    ? cv.copyMakeBorder(image, result, top, bottom, left, right, borderType)
+    : cv.copyMakeBorder(image, result, top, bottom, left, right, borderType, value);
   if (out !== undefined) {
     throw new Error("Unexpected return value from cv.copyMakeBorder: " + JSON.stringify(out));
   }
-  return
+  logger.debug(logPrefix, "Converted OpenCV Mat instance using copy make boarder '" + borderType + "'.");
+  return result;
 }
 
 
-const OpenCVintegral = function (aux: any, windows: any, num: any): any {
-  const out = cv.integral(aux, windows, num);
+const OpenCVintegral = function (image: any, rows: number, cols: number, num: number): any {
+  logger.debug(logPrefix, "Converting OpenCV Mat instance using integral rows '" + rows + "' cols '" + cols + "'.");
+  const windows = cv.Mat.zeros(rows, cols, OpenCVCV_8UC4());
+  const out = cv.integral(image, windows, num);
   if (out !== undefined) {
     throw new Error("Unexpected return value from cv.integral: " + JSON.stringify(out));
   }
-  return null;
+  logger.debug(logPrefix, "Converted OpenCV Mat instance using integral rows '" + rows + "' cols '" + cols + "'.");
+  return windows;
 }
 
-const OpenCVEqualizeHist = function (src: any): any {
-  // TODO: ensure mat delete
-  const dst = new cv.Mat();
-  const out = cv.equalizeHist(src, dst);
+const OpenCVEqualizeHist = function (mat: any): void {
+  logger.debug(logPrefix, "Converting OpenCV Mat instance using equalize hist.");
+  const out = cv.equalizeHist(mat, mat);
   if (out !== undefined) {
     throw new Error("Unexpected return value from cv.equalizeHist: " + JSON.stringify(out));
   }
-  return dst;
+  logger.debug(logPrefix, "Converted OpenCV Mat instance using equalize hist.");
 }
-const OpenCVThreshold = function (
-  src: any, thresholdValue: any, thresholdMethodValue: any, thresholdTypeValue: any): any {
+const OpenCVThreshold = function (mat: any, thresholdValue: any, thresholdMethodValue: any, thresholdTypeValue: any): void {
+  logger.debug(logPrefix, "Converting OpenCV Mat instance using threshold '" + thresholdMethodValue + "'.");
+  const out = cv.threshold(mat, mat, thresholdValue, thresholdMethodValue, thresholdTypeValue);
+  if (out !== undefined) {
+    throw new Error("Unexpected return value from cv.threshold: " + JSON.stringify(out));
+  }
+  logger.debug(logPrefix, "Converted OpenCV Mat instance using threshold '" + thresholdMethodValue + "'.");
+}
 
-  const result = cv.threshold(src, thresholdValue, thresholdMethodValue, thresholdTypeValue);
-  return result[1];
-}
 const OpenCVadaptiveThreshold = function (
-  src: any, thresholdValue: any, thresholdMethodValue: any, thresholdTypeValue: any,
-  thresholdBlockSize: any, thresholdConstant: any): any {
-  // TODO: ensure mat delete
-  const dst = new cv.Mat();
+  mat: any, thresholdValue: any, thresholdMethodValue: any, thresholdTypeValue: any,
+  thresholdBlockSize: any, thresholdConstant: any): void {
+  logger.debug(logPrefix, "Converting OpenCV Mat instance using adaptive threshold '" + thresholdMethodValue + "'.");
   const out = cv.adaptiveThreshold(
-    src, dst, thresholdValue, thresholdMethodValue,
+    mat, mat, thresholdValue, thresholdMethodValue,
     thresholdTypeValue, thresholdBlockSize, thresholdConstant);
   if (out !== undefined) {
     throw new Error("Unexpected return value from cv.adaptiveThreshold: " + JSON.stringify(out));
   }
-  return dst;
+  logger.debug(logPrefix, "Converted OpenCV Mat instance using adaptive threshold '" + thresholdMethodValue + "'.");
 }
 
-const OpenCVgetStructuringElement = function (shape: any, size1: any, size2: any): any {
-
-  return cv.getStructuringElement(shape, new cv.Size(size1, size2));
+const OpenCVgetStructuringElement = function (shape: any, size1: any, size2: any): void {
+  logger.debug(logPrefix, "Converting OpenCV Mat instance using get structuring element '" + size1 + "', '" + size2 + "'.");
+  const size = new cv.Size(size1, size2);
+  const out = cv.getStructuringElement(shape, size);
+  if (out !== undefined) {
+    throw new Error("Unexpected return value from cv.getStructuringElement: " + JSON.stringify(out));
+  }
+  logger.debug(logPrefix, "Converted OpenCV Mat instance using get structuring element '" + size1 + "', '" + size2 + "'.");
 }
-const OpenCVDilate = function (image: any, kernel: any, iterations: any): any {
-
-  return cv.dilate(image, kernel, null, null, iterations);
+const OpenCVDilate = function (mat: any, kernel: any, iterations: any): void {
+  logger.debug(logPrefix, "Converting OpenCV Mat instance using dilate '" + iterations + "'.");
+  const out = cv.dilate(mat, kernel, null, null, iterations);
+  if (out !== undefined) {
+    throw new Error("Unexpected return value from cv.getStructuringElement: " + JSON.stringify(out));
+  }
+  logger.debug(logPrefix, "Converted OpenCV Mat instance using dilate '" + iterations + "'.");
 }
 
-const OpenCVfindContours = function (image: any): any {
+const OpenCVfindContours = function (mat: any): void {
+  logger.debug(logPrefix, "Converting OpenCV Mat instance using find contours.");
   // Extracts all contours from the image, and resorts them by area (from largest to smallest)
-
-  let [contours, hierarchy] = cv.findContours(image, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
-  // TODO
+  let out = cv.findContours(mat, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
   // contours = sorted(contours, key = cv.contourArea, reverse = True)
-  return contours
+  if (out !== undefined) {
+    throw new Error("Unexpected return value from cv.findContours: " + JSON.stringify(out));
+  }
+  logger.debug(logPrefix, "Converted OpenCV Mat instance using find contours.");
 }
 
 
@@ -255,21 +312,29 @@ const OpenCVMORPH_RECT = function (): number {
 const OpenCVBORDER_REFLECT = function (): number {
   return cv.BORDER_REFLECT;
 }
-const OpenCVCV_32SC4 = function (): number {
-  return cv.CV_32SC4;
+const OpenCVCV_8UC4 = function (): number {
+  return cv.CV_8UC4;
 }
 
+// console.log('image width: ' + mat.cols + '\n' +
+//   'image height: ' + mat.rows + '\n' +
+//   'image size: ' + mat.size().width + '*' + mat.size().height + '\n' +
+//   'image depth: ' + mat.depth() + '\n' +
+//   'image channels ' + mat.channels() + '\n' +
+//   'image type: ' + mat.type() + '\n' +
+//   'image continuous: ' + mat.isContinuous());
 
 export {
   initOpenCV,
-  openCVSetPixelGray,
+  OpenCVNewMat,
+  OpenCVSetMatPixels,
+  OpenCVGetMatIndex,
   OpenCVimread,
+  OpenCVimshow,
   OpenCVcvtColor,
-  OpenCVMat,
   OpenCVgetStructuringElement,
   OpenCVintensityTransformGammaCorrection,
   OpenCVcopyMakeBorder,
-  OpenCVMatZeros,
   OpenCVintegral,
   OpenCVEqualizeHist,
   OpenCVadaptiveThreshold,
@@ -288,5 +353,4 @@ export {
   OpenCVTHRESH_OTSU,
   OpenCVMORPH_RECT,
   OpenCVBORDER_REFLECT,
-  OpenCVCV_32SC4,
 }

@@ -80,7 +80,8 @@ export class ExplainPageComponent {
     const imageThresholdAdaptive01 = await this.processingService.imageThresholdAdaptive01(imageResize.image);
     this.stepCards.push(imageThresholdAdaptive01.stepCard);
 
-    // const imageThresholdAdaptive02 = await this.processingService.imageThresholdAdaptive02(imageResize.image);
+    const imageThresholdAdaptive02 = await this.processingService.imageThresholdAdaptive02(imageResize.image);
+    this.stepCards.push(imageThresholdAdaptive02.stepCard);
 
   }
 }
