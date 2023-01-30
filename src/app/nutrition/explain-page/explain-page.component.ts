@@ -83,5 +83,17 @@ export class ExplainPageComponent {
     const imageThresholdAdaptive02 = await this.processingService.imageThresholdAdaptive02(imageResize.image);
     this.stepCards.push(imageThresholdAdaptive02.stepCard);
 
+    // ocr
+    const ocr = await this.processingService.tesseractRecognize(imageResize.image);
+    if (ocr && ocr.data && ocr.data.imageColor) {
+      this.stepCards.push(this.processingService.buildCardFromDataUri("OCR color image", "imageOcrColor", ocr.data.imageColor));
+    }
+    if (ocr && ocr.data && ocr.data.imageGrey) {
+      this.stepCards.push(this.processingService.buildCardFromDataUri("OCR grey image", "imageOcrGrey", ocr.data.imageGrey));
+    }
+    if (ocr && ocr.data && ocr.data.imageBinary) {
+      this.stepCards.push(this.processingService.buildCardFromDataUri("OCR binary image", "imageOcrBinary", ocr.data.imageBinary));
+    }
+
   }
 }

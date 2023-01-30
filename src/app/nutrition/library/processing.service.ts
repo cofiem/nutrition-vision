@@ -1,5 +1,4 @@
-import {Injectable} from '@angular/core';
-import {isDevMode} from "@angular/core";
+import {Injectable, isDevMode} from '@angular/core';
 import {ProgressBarMode} from "@angular/material/progress-bar";
 import {DomSanitizer} from "@angular/platform-browser";
 
@@ -17,6 +16,7 @@ import imageThresholdGeneric01 from "./imageThresholdGeneric01";
 import imageThresholdAdaptive01 from './imageThresholdAdaptive01';
 import imageThresholdAdaptive02 from './imageThresholdAdaptive02';
 import ProcessingOutput from "./processing-output";
+import StepCard from "./step-card";
 
 
 @Injectable()
@@ -93,16 +93,21 @@ export class ProcessingService {
    * @param image The image to process.
    * @param rect The optional portion of the image to process.
    */
-  async runTesseractRecognize(image: ImageLike, rect: Rectangle | undefined): Promise<RecognizeResult | undefined> {
+  async tesseractRecognize(image: ImageLike, rect?: Rectangle | undefined): Promise<RecognizeResult | undefined> {
     if (this.tesseractInProgress) {
       this.logger.warn(this.logPrefix, "Tesseract is already processing, cannot process in parallel.");
       return undefined;
     }
 
+    let result: RecognizeResult | undefined = undefined;
+
     this.tesseractInProgress = true;
-    const worker = await this.getTesseractWorker();
-    const result = await executeTesseractRecognize(worker, image, rect);
-    this.tesseractInProgress = false;
+    try {
+      const worker = await this.getTesseractWorker();
+      result = await executeTesseractRecognize(worker, image, rect);
+    } finally {
+      this.tesseractInProgress = false;
+    }
 
     if (isDevMode()) {
       this.logger.debug(this.logPrefix, result);
@@ -121,26 +126,10 @@ export class ProcessingService {
     }
     const blobProcessed = await convertImageDataToBlob(imageDataProcessed);
     if (blobProcessed) {
-      const objectUrlCheckedProcessed = convertBlobToSafeUrl(blobProcessed, this.sanitizer);
-
-      const stepCard = {
-        title: 'Resize image - option 1',
-        imageId: 'imageResizeOption1',
-        imageAlt: "Preview of image 1",
-        imageSrc: objectUrlCheckedProcessed.srcUrl,
-        progressMode: 'determinate' as ProgressBarMode,
-        progressValue: 0,
-        imageLoadFunc: (event: Event) => {
-          this.logger.info(this.logPrefix, "Image imageResize01 successful.");
-          this.logger.info(this.logPrefix, "Revoke object url.");
-          URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
-        },
-        imageErrorFunc: (event: Event) => {
-          this.logger.error(this.logPrefix, "Image imageResize01 error.");
-          this.logger.error(this.logPrefix, "Revoke object url.");
-          URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
-        },
-      };
+      const stepCard = this.buildCardFromBlob(
+        'Resize image - option 1',
+        'imageResizeOption1',
+        blobProcessed);
       return new ProcessingOutput(
         imageDataProcessed,
         blobProcessed,
@@ -164,26 +153,10 @@ export class ProcessingService {
     const imageDataProcessed = new ImageData(imageOneDimArrayProcessed, imageOriginal.width, imageOriginal.height);
     const blobProcessed = await convertImageDataToBlob(imageDataProcessed);
     if (blobProcessed) {
-      const objectUrlCheckedProcessed = convertBlobToSafeUrl(blobProcessed, this.sanitizer);
-
-      const stepCard = {
-        title: 'Threshold image - option 1',
-        imageId: 'imageThresholdOption1',
-        imageAlt: "Preview of image 1",
-        imageSrc: objectUrlCheckedProcessed.srcUrl,
-        progressMode: 'determinate' as ProgressBarMode,
-        progressValue: 0,
-        imageLoadFunc: (event: Event) => {
-          this.logger.info(this.logPrefix, "Image imageThresholdGeneric01 successful.");
-          this.logger.info(this.logPrefix, "Revoke object url.");
-          URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
-        },
-        imageErrorFunc: (event: Event) => {
-          this.logger.info(this.logPrefix, "Image imageThresholdGeneric01 error.");
-          this.logger.info(this.logPrefix, "Revoke object url.");
-          URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
-        },
-      };
+      const stepCard = this.buildCardFromBlob(
+        'Threshold image - option 1',
+        'imageThresholdOption1',
+        blobProcessed);
       return new ProcessingOutput(
         imageDataProcessed,
         blobProcessed,
@@ -208,26 +181,10 @@ export class ProcessingService {
     const blobProcessed = await convertImageDataToBlob(imageDataProcessed);
 
     if (blobProcessed) {
-      const objectUrlCheckedProcessed = convertBlobToSafeUrl(blobProcessed, this.sanitizer);
-
-      const stepCard = {
-        title: 'Threshold adaptive image - option 1',
-        imageId: 'imageThresholdAdaptive01',
-        imageAlt: "Preview of image threshold adaptive 1",
-        imageSrc: objectUrlCheckedProcessed.srcUrl,
-        progressMode: 'determinate' as ProgressBarMode,
-        progressValue: 0,
-        imageLoadFunc: (event: Event) => {
-          this.logger.info(this.logPrefix, "Image imageThresholdAdaptive01 successful.");
-          this.logger.info(this.logPrefix, "Revoke object url.");
-          URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
-        },
-        imageErrorFunc: (event: Event) => {
-          this.logger.info(this.logPrefix, "Image imageThresholdAdaptive01 error.");
-          this.logger.info(this.logPrefix, "Revoke object url.");
-          URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
-        },
-      };
+      const stepCard = this.buildCardFromBlob(
+        'Threshold adaptive image - option 1',
+        'imageThresholdAdaptive01',
+        blobProcessed);
       return new ProcessingOutput(
         imageDataProcessed,
         blobProcessed,
@@ -250,26 +207,10 @@ export class ProcessingService {
     const blobProcessed = await convertImageDataToBlob(imageDataProcessed);
 
     if (blobProcessed) {
-      const objectUrlCheckedProcessed = convertBlobToSafeUrl(blobProcessed, this.sanitizer);
-
-      const stepCard = {
-        title: 'Threshold adaptive image - option 2',
-        imageId: 'imageThresholdAdaptive02',
-        imageAlt: "Preview of image threshold adaptive 2",
-        imageSrc: objectUrlCheckedProcessed.srcUrl,
-        progressMode: 'determinate' as ProgressBarMode,
-        progressValue: 0,
-        imageLoadFunc: (event: Event) => {
-          this.logger.info(this.logPrefix, "Image imageThresholdAdaptive02 successful.");
-          this.logger.info(this.logPrefix, "Revoke object url.");
-          URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
-        },
-        imageErrorFunc: (event: Event) => {
-          this.logger.info(this.logPrefix, "Image imageThresholdAdaptive02 error.");
-          this.logger.info(this.logPrefix, "Revoke object url.");
-          URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
-        },
-      };
+      const stepCard = this.buildCardFromBlob(
+        'Threshold adaptive image - option 2',
+        'imageThresholdAdaptive02',
+        blobProcessed);
       return new ProcessingOutput(
         imageDataProcessed,
         blobProcessed,
@@ -284,5 +225,42 @@ export class ProcessingService {
         undefined
       );
     }
+  }
+
+  buildCardFromBlob(title: string, imageId: string, blob: Blob): StepCard {
+    const objectUrlCheckedProcessed = convertBlobToSafeUrl(blob, this.sanitizer);
+    return {
+      title: title,
+      imageId: imageId,
+      imageAlt: "Preview of " + title,
+      imageSrc: objectUrlCheckedProcessed.srcUrl,
+      progressMode: 'determinate' as ProgressBarMode,
+      progressValue: 0,
+      imageLoadFunc: (event: Event) => {
+        this.logger.info(this.logPrefix, `Image ${imageId} successful (revoked object url).`);
+        URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
+      },
+      imageErrorFunc: (event: Event) => {
+        this.logger.error(this.logPrefix, `Image ${imageId} error (revoked object url).`);
+        URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
+      },
+    };
+  }
+
+  buildCardFromDataUri(title: string, imageId: string, imageDataUri: string): StepCard {
+    return {
+      title: title,
+      imageId: imageId,
+      imageAlt: "Preview of " + title,
+      imageSrc: imageDataUri,
+      progressMode: 'determinate' as ProgressBarMode,
+      progressValue: 0,
+      imageLoadFunc: (event: Event) => {
+        this.logger.info(this.logPrefix, `Image ${imageId} successful.`);
+      },
+      imageErrorFunc: (event: Event) => {
+        this.logger.error(this.logPrefix, `Image ${imageId} error.`);
+      },
+    };
   }
 }

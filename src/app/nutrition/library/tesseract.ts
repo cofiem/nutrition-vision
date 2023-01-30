@@ -1,6 +1,7 @@
 import {createWorker, RecognizeOptions, RecognizeResult, Rectangle} from "tesseract.js";
 import {fromEvent} from "rxjs";
 import Logger from "../../logger/logger";
+import * as Tesseract from "tesseract.js";
 
 
 const tesseractLogPrefix: string = "Tesseract";
@@ -26,6 +27,12 @@ const createTesseractWorker = async function (
   });
   await tesseractWorker.loadLanguage("eng");
   await tesseractWorker.initialize("eng");
+  await tesseractWorker.setParameters({
+    tessedit_ocr_engine_mode: Tesseract.OEM.DEFAULT,
+    tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
+    // user_defined_dpi: Define custom dpi, use to fix 'Warning: Invalid resolution 0 dpi. Using 70 instead.'
+    user_defined_dpi: '100'
+  });
 
   const browserBeforeUnload = fromEvent<BeforeUnloadEvent>(document, 'beforeunload')
 
@@ -70,7 +77,7 @@ const executeTesseractRecognize = async function (
 
   logger.log(tesseractLogPrefix, "Started tesseract recognise for image.");
 
-  const result = await worker.recognize(image, {rotateAuto: true}, {
+  const result = await worker.recognize(image, options, {
     osd: true, text: true, blocks: true,
 
     imageColor: true, imageGrey: true, imageBinary: true,
