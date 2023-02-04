@@ -11,6 +11,7 @@ import {
   OpenCVTHRESH_BINARY,
   OpenCVTHRESH_BINARY_INV
 } from "./opencv";
+import Logger from "../../logger/logger";
 
 const logPrefix = "imageThresholdAdaptive01";
 
@@ -34,7 +35,8 @@ const logPrefix = "imageThresholdAdaptive01";
 const imageThresholdAdaptive01 = function (
   imageInput: string | HTMLImageElement | HTMLCanvasElement, thresholdValue: number, thresholdPrepare: string, thresholdMethod: string,
   thresholdType: string, thresholdBlockSize: number, thresholdConstant: number): ImageData {
-
+  const logger = new Logger();
+  logger.debug(logPrefix, "Start imageThresholdAdaptive01.");
   // maxValue	non-zero value assigned to the pixels for which the condition is satisfied
   // e.g. 200, 0, 255
   if (thresholdValue < 0 || thresholdValue > 255) {
@@ -107,6 +109,9 @@ const imageThresholdAdaptive01 = function (
     OpenCVadaptiveThreshold(mat, thresholdValue, thresholdMethodValue, thresholdTypeValue, thresholdBlockSize, thresholdConstant);
 
     const result = OpenCVimshow(mat);
+
+    logger.info(logPrefix, "Finished imageThresholdAdaptive01.");
+
     return result;
   } finally {
     if (mat) {
@@ -116,32 +121,6 @@ const imageThresholdAdaptive01 = function (
 }
 
 
-/**
- * De-skew using OpenCV.
- */
-const imageDeSkewVariation01 = function () {
-  // todo
-  // newImage = cvImage.copy()
-  //         (h, w) = newImage.shape[:2]
-  //         center = (w // 2, h // 2)
-  //         M = cv2.getRotationMatrix2D(center, angle, 1.0)
-  //         newImage = cv2.warpAffine(newImage, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
-  //         return
-}
 
-/**
- * De-skew using canvas transforms.
- */
-const imageDeSkewVariation02 = function () {
-  // todo: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/rotate
-  //       https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/translate
-}
-
-/**
- * De-skew using css transforms.
- */
-const imageDeSkewVariation03 = function () {
-  // todo: https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate
-}
 
 export default imageThresholdAdaptive01;

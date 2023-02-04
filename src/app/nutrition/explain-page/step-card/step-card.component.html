@@ -1,10 +1,25 @@
 <mat-card class="step-card">
   <mat-card-header>
-    <mat-card-title [textContent]="title"></mat-card-title>
+    <mat-card-title [textContent]="stepCard?.title"></mat-card-title>
   </mat-card-header>
-  <img mat-card-image [id]="imageId" [alt]="imageAlt" [src]="imageSrc"
-       (load)="imageOnLoad($event)" (error)="imageOnError($event)">
+  <img mat-card-image
+       [id]="stepCard?.imageId"
+       [alt]="stepCard?.imageAlt"
+       [src]="stepCard?.imageSrc"
+       (load)="imageOnLoad($event)"
+       (error)="imageOnError($event)">
+  <div *ngIf="stepCard?.extractedWords"
+       style="position:absolute;top:48px;">
+    <div *ngFor="let extractedWord of stepCard?.extractedWords"
+         [title]="extractedWord.text"
+         [style]="displayBox(extractedWord)">
+      {{extractedWord.text}}
+    </div>
+  </div>
   <mat-card-footer>
-    <mat-progress-bar [mode]="progressMode" [value]="progressValue"></mat-progress-bar>
+    <mat-progress-bar
+      [mode]="stepCard?.progressMode || 'determinate'"
+      [value]="stepCard?.progressValue"
+    ></mat-progress-bar>
   </mat-card-footer>
 </mat-card>

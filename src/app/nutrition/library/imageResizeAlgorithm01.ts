@@ -22,8 +22,8 @@ const imageResizeAlgorithm01 = function (image: HTMLImageElement, targetWidth: n
   if (!targetWidth || targetWidth < 1 || !targetHeight || targetHeight < 1) {
     throw new Error("Width and height must be greater than 0.");
   }
-
   const logger = new Logger();
+  logger.debug(logPrefix, "Start imageResize01.");
 
 // Make sure the width and height preserve the original aspect ratio and adjust if needed
   let width: number = targetWidth;
@@ -32,11 +32,6 @@ const imageResizeAlgorithm01 = function (image: HTMLImageElement, targetWidth: n
     const value = targetHeight * (image.width / image.height);
     width = Math.floor(value);
   } else {
-    logger.log(logPrefix, JSON.stringify({
-      targetWidth: targetWidth,
-      imageHeight: image.height,
-      imageWidth: image.width,
-    }))
     const value = targetWidth * (image.height / image.width);
     height = Math.floor(value);
   }
@@ -99,6 +94,9 @@ const imageResizeAlgorithm01 = function (image: HTMLImageElement, targetWidth: n
     0, 0, width, height);
 
   const result = outputCanvasContext.getImageData(0, 0, outputCanvas.width, outputCanvas.height);
+
+  logger.info(logPrefix, "Finished imageResize01.");
+
   return result;
 }
 

@@ -3,28 +3,28 @@ import {isDevMode} from "@angular/core";
 class Logger {
 
   error(prefix: string, msg: any) {
-    console.error(this.GetMessage('error', prefix), msg);
+    console.error(this.getMessage('error', prefix), msg);
   }
 
   warn(prefix: string, msg: any) {
-    console.warn(this.GetMessage('warn', prefix), msg);
+    console.warn(this.getMessage('warn', prefix), msg);
   }
 
   log(prefix: string, msg: any) {
-    console.log(this.GetMessage('log', prefix), msg);
+    console.log(this.getMessage('log', prefix), msg);
   }
 
   info(prefix: string, msg: any) {
-    console.info(this.GetMessage('info', prefix), msg);
+    console.info(this.getMessage('info', prefix), msg);
   }
 
   debug(prefix: string, msg: any) {
     if (isDevMode()) {
-      console.debug(this.GetMessage('debug', prefix), msg);
+      console.debug(this.getMessage('debug', prefix), msg);
     }
   }
 
-  private GetMessage(level: string, prefix: string): string {
+  private getMessage(level: string, prefix: string): string {
     return `[${prefix}] ${level.toUpperCase()}:`;
   }
 }

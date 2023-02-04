@@ -1,4 +1,11 @@
-import {createWorker, RecognizeOptions, RecognizeResult, Rectangle} from "tesseract.js";
+import {
+  Baseline,
+  Bbox, Choice,
+  createWorker,
+  RecognizeOptions,
+  RecognizeResult,
+  Rectangle
+} from "tesseract.js";
 import {fromEvent} from "rxjs";
 import Logger from "../../logger/logger";
 import * as Tesseract from "tesseract.js";
@@ -19,7 +26,7 @@ const createTesseractWorker = async function (
   const logger = new Logger();
   const tesseractWorker = await createWorker({
     logger: infoHandler || function (arg) {
-      logger.info(tesseractLogPrefix, "Worker log: " + JSON.stringify(arg));
+      logger.debug(tesseractLogPrefix, "Worker log: " + JSON.stringify(arg));
     },
     errorHandler: errorHandler || function (arg) {
       logger.error(tesseractLogPrefix, "Worker error: " + JSON.stringify(arg));
@@ -71,11 +78,11 @@ const executeTesseractRecognize = async function (
   const options: Partial<RecognizeOptions> = {rotateAuto: true};
 
   if (rect) {
-    logger.log(tesseractLogPrefix, "Init tesseract using rectangle  " + JSON.stringify(rect) + ".");
+    logger.info(tesseractLogPrefix, "Init tesseract using rectangle  " + JSON.stringify(rect) + ".");
     options.rectangle = rect;
   }
 
-  logger.log(tesseractLogPrefix, "Started tesseract recognise for image.");
+  logger.info(tesseractLogPrefix, "Started tesseract recognise for image.");
 
   const result = await worker.recognize(image, options, {
     osd: true, text: true, blocks: true,
@@ -85,12 +92,34 @@ const executeTesseractRecognize = async function (
     hocr: false, box: false,
   });
 
-  logger.log(tesseractLogPrefix, "Finished tesseract recognise.");
+  logger.info(tesseractLogPrefix, "Finished tesseract recognise.");
 
   return result;
+}
+
+interface BasicWord {
+  choices: Choice[];
+  text: string;
+  confidence: number;
+  baseline: Baseline;
+  bbox: Bbox;
+  is_numeric: boolean;
+  in_dictionary: boolean;
+  direction: string;
+  language: string;
+  is_bold: boolean;
+  is_italic: boolean;
+  is_underlined: boolean;
+  is_monospace: boolean;
+  is_serif: boolean;
+  is_smallcaps: boolean;
+  font_size: number;
+  font_id: number;
+  font_name: string;
 }
 
 export {
   createTesseractWorker,
   executeTesseractRecognize,
+  BasicWord
 }

@@ -25,6 +25,7 @@ import {
   OpenCVTHRESH_OTSU,
   OpenCVThreshold
 } from "./opencv";
+import Logger from "../../logger/logger";
 
 const logPrefix = "imageSkewAngle01";
 
@@ -36,6 +37,8 @@ const logPrefix = "imageSkewAngle01";
  */
 const imageSkewAngle01 = function (
   imageInput: string | HTMLImageElement | HTMLCanvasElement): number {
+  const logger = new Logger();
+  logger.debug(logPrefix, "Start imageSkewAngle01.");
 
   let mat: any = null;
   try {
@@ -92,6 +95,8 @@ const imageSkewAngle01 = function (
     // middleContour = contours[len(contours) // 2]
     // smallestContour = contours[-1]
     // angle = sum([cv2.minAreaRect(largestContour)[-1], cv2.minAreaRect(middleContour)[-1], cv2.minAreaRect(smallestContour)[-1]]) / 3
+
+    logger.info(logPrefix, "Finished imageSkewAngle01.");
 
     return skew;
   } finally {

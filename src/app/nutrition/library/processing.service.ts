@@ -43,7 +43,7 @@ export class ProcessingService {
     } else {
       throw new Error("OpenCV Initialisation failed.");
     }
-    if (isDevMode()) {
+    if (isDevMode() && !this.openCVIsInitDone) {
       this.logger.debug(this.logPrefix, OpenCVgetBuildInformation());
     }
     this.openCVIsInitDone = true;
@@ -117,11 +117,11 @@ export class ProcessingService {
   }
 
   async imageResize01(imageOriginal: HTMLImageElement): Promise<ProcessingOutput> {
-    this.logger.info(this.logPrefix, "Start imageResize01.");
+
     let imageDataProcessed: ImageData;
     imageDataProcessed = imageResizeAlgorithm01(imageOriginal, 600, 600);
     if (imageDataProcessed.width != imageOriginal.width && imageDataProcessed.height != imageOriginal.height) {
-      // imageInfo..this.fileSelectedInfo += " The image was resized to " + imageResizedImageData.width + "px wide by " +
+      // imageInfo.this.fileSelectedInfo += " The image was resized to " + imageResizedImageData.width + "px wide by " +
       //   imageResizedImageData.height + "px high.";
     }
     const blobProcessed = await convertImageDataToBlob(imageDataProcessed);
@@ -129,6 +129,7 @@ export class ProcessingService {
       const stepCard = this.buildCardFromBlob(
         'Resize image - option 1',
         'imageResizeOption1',
+        imageDataProcessed.width, imageDataProcessed.height,
         blobProcessed);
       return new ProcessingOutput(
         imageDataProcessed,
@@ -148,7 +149,6 @@ export class ProcessingService {
   }
 
   async imageThresholdGeneric01(imageOriginal: ImageData): Promise<ProcessingOutput> {
-    this.logger.info(this.logPrefix, "Start imageThresholdGeneric01.");
     const imageOneDimArrayProcessed = imageThresholdGeneric01(imageOriginal, 155);
     const imageDataProcessed = new ImageData(imageOneDimArrayProcessed, imageOriginal.width, imageOriginal.height);
     const blobProcessed = await convertImageDataToBlob(imageDataProcessed);
@@ -156,6 +156,7 @@ export class ProcessingService {
       const stepCard = this.buildCardFromBlob(
         'Threshold image - option 1',
         'imageThresholdOption1',
+        imageDataProcessed.width, imageDataProcessed.height,
         blobProcessed);
       return new ProcessingOutput(
         imageDataProcessed,
@@ -174,7 +175,6 @@ export class ProcessingService {
   }
 
   async imageThresholdAdaptive01(imageOriginal: string | HTMLImageElement | HTMLCanvasElement): Promise<ProcessingOutput> {
-    this.logger.info(this.logPrefix, "Start imageThresholdAdaptive01.");
     const imageDataProcessed = imageThresholdAdaptive01(
       imageOriginal, 255, 'gamma', 'gaussian',
       'standard', 255, 19);
@@ -184,6 +184,7 @@ export class ProcessingService {
       const stepCard = this.buildCardFromBlob(
         'Threshold adaptive image - option 1',
         'imageThresholdAdaptive01',
+        imageDataProcessed.width, imageDataProcessed.height,
         blobProcessed);
       return new ProcessingOutput(
         imageDataProcessed,
@@ -202,7 +203,6 @@ export class ProcessingService {
   }
 
   async imageThresholdAdaptive02(imageOriginal: string | HTMLImageElement | HTMLCanvasElement) {
-    this.logger.info(this.logPrefix, "Start imageThresholdAdaptive02.");
     const imageDataProcessed = imageThresholdAdaptive02(imageOriginal);
     const blobProcessed = await convertImageDataToBlob(imageDataProcessed);
 
@@ -210,6 +210,7 @@ export class ProcessingService {
       const stepCard = this.buildCardFromBlob(
         'Threshold adaptive image - option 2',
         'imageThresholdAdaptive02',
+        imageDataProcessed.width, imageDataProcessed.height,
         blobProcessed);
       return new ProcessingOutput(
         imageDataProcessed,
@@ -227,7 +228,11 @@ export class ProcessingService {
     }
   }
 
-  buildCardFromBlob(title: string, imageId: string, blob: Blob): StepCard {
+  buildCardFromBlob(
+    title: string, imageId: string,
+    imageWidth: number, imageHeight: number,
+    blob: Blob
+  ): StepCard {
     const objectUrlCheckedProcessed = convertBlobToSafeUrl(blob, this.sanitizer);
     return {
       title: title,
@@ -236,18 +241,25 @@ export class ProcessingService {
       imageSrc: objectUrlCheckedProcessed.srcUrl,
       progressMode: 'determinate' as ProgressBarMode,
       progressValue: 0,
+      extractedWords: undefined,
+      imageWidth: imageWidth,
+      imageHeight: imageHeight,
       imageLoadFunc: (event: Event) => {
-        this.logger.info(this.logPrefix, `Image ${imageId} successful (revoked object url).`);
         URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
+        this.logger.debug(this.logPrefix, `Image load for ${imageId} successful (revoked object url).`);
       },
       imageErrorFunc: (event: Event) => {
-        this.logger.error(this.logPrefix, `Image ${imageId} error (revoked object url).`);
         URL.revokeObjectURL(objectUrlCheckedProcessed.objectUrl);
-      },
+        this.logger.error(this.logPrefix, `Image load for ${imageId} error (revoked object url).`);
+      }
     };
   }
 
-  buildCardFromDataUri(title: string, imageId: string, imageDataUri: string): StepCard {
+  buildCardFromDataUri(
+    title: string, imageId: string,
+    imageWidth: number, imageHeight: number,
+    imageDataUri: string
+  ): StepCard {
     return {
       title: title,
       imageId: imageId,
@@ -255,8 +267,11 @@ export class ProcessingService {
       imageSrc: imageDataUri,
       progressMode: 'determinate' as ProgressBarMode,
       progressValue: 0,
+      extractedWords: undefined,
+      imageWidth: imageWidth,
+      imageHeight: imageHeight,
       imageLoadFunc: (event: Event) => {
-        this.logger.info(this.logPrefix, `Image ${imageId} successful.`);
+        this.logger.debug(this.logPrefix, `Image ${imageId} successful.`);
       },
       imageErrorFunc: (event: Event) => {
         this.logger.error(this.logPrefix, `Image ${imageId} error.`);

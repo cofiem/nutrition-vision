@@ -129,13 +129,25 @@ const convertBlobToImageSrc = function (blob: Blob, image: HTMLImageElement): Pr
 const convertBlobToSafeUrl = function (blob: Blob, sanitizer: DomSanitizer): { srcUrl: SafeUrl, objectUrl: string } {
   const objUrl = URL.createObjectURL(blob);
 
-  // TODO: other checks to run? Note that the uploaded file is checked for the 'image' type.
+  // TODO: are there other checks to run on blob and objectUrl?
+  // Note that the uploaded file is checked for the 'image' type.
   if (!objUrl.startsWith('blob:')) {
     throw new Error("Unrecognised object url '" + JSON.stringify(objUrl) + "'.");
   }
 
   const result = sanitizer.bypassSecurityTrustUrl(objUrl);
   return {srcUrl: result, objectUrl: objUrl};
+}
+
+const imageRotateCanvas = function () {
+  // todo: implement imageRotateCanvas
+  // see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/rotate
+  // see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/translate
+}
+
+const imageRotateCss = function () {
+  // todo: implement imageRotateCss
+  // see https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate
 }
 
 export {
@@ -145,5 +157,7 @@ export {
   convertUploadToImageFile,
   convertBlobToImage,
   convertBlobToImageSrc,
-  convertBlobToSafeUrl
+  convertBlobToSafeUrl,
+  imageRotateCanvas,
+  imageRotateCss
 }

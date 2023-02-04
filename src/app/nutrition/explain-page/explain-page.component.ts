@@ -32,30 +32,6 @@ export class ExplainPageComponent {
   async onFileSelected(event: Event) {
     this.stepCards = [];
 
-    // // get the selected file
-    // const inputNode: any = document.querySelector('#file');
-    //
-    // const inputFile = convertUploadToImageFile(inputNode);
-    //
-    // // show preview of selected file
-    // const imageOriginal: any = document.querySelector('#previewImageOriginal');
-    // imageOriginal.src = window.URL.createObjectURL(inputFile);
-    //
-    // // run OCR
-    // const result = await this.tesseractService.doRecognize(inputNode.files[0], undefined);
-    // if (result) {
-    //   this.text = result.data.text;
-    //
-    //   const imgOriginal: any = document.getElementById("imgOriginal");
-    //   if (imgOriginal && result.data.imageColor) imgOriginal.src = result.data.imageColor;
-    //
-    //   const imgGrey: any = document.getElementById("imgGrey")
-    //   if (imgGrey && result.data.imageColor) imgGrey.src = result.data.imageGrey;
-    //
-    //   const imgBinary: any = document.getElementById("imgBinary")
-    //   if (imgBinary && result.data.imageColor) imgBinary.src = result.data.imageBinary;
-    // }
-
     this.processingService.openCVInitialiseResources();
     await this.processingService.tesseractInitialiseResources();
 
@@ -85,14 +61,41 @@ export class ExplainPageComponent {
 
     // ocr
     const ocr = await this.processingService.tesseractRecognize(imageResize.image);
-    if (ocr && ocr.data && ocr.data.imageColor) {
-      this.stepCards.push(this.processingService.buildCardFromDataUri("OCR color image", "imageOcrColor", ocr.data.imageColor));
+    if (!ocr || !ocr.data) {
+      return;
     }
-    if (ocr && ocr.data && ocr.data.imageGrey) {
-      this.stepCards.push(this.processingService.buildCardFromDataUri("OCR grey image", "imageOcrGrey", ocr.data.imageGrey));
+
+    if (ocr.data.imageColor) {
+      this.stepCards.push(this.processingService.buildCardFromDataUri(
+        "text recognition color image", "imageOcrColor",
+        imageResize.imageData.width, imageResize.imageData.height,
+        ocr.data.imageColor));
     }
-    if (ocr && ocr.data && ocr.data.imageBinary) {
-      this.stepCards.push(this.processingService.buildCardFromDataUri("OCR binary image", "imageOcrBinary", ocr.data.imageBinary));
+    if (ocr.data.imageGrey) {
+      this.stepCards.push(this.processingService.buildCardFromDataUri(
+        "text recognition grey image", "imageOcrGrey",
+        imageResize.imageData.width, imageResize.imageData.height,
+        ocr.data.imageGrey));
+    }
+    if (ocr.data.imageBinary) {
+      this.stepCards.push(this.processingService.buildCardFromDataUri(
+        "text recognition binary image", "imageOcrBinary",
+        imageResize.imageData.width, imageResize.imageData.height,
+        ocr.data.imageBinary));
+    }
+
+    // show image with words outlined using 'ocr.data'
+    if (ocr.data.words && imageResize.blob) {
+      const card = this.processingService.buildCardFromBlob(
+        "text recognition words", "imageOcrWords",
+        imageResize.imageData.width, imageResize.imageData.height,
+        imageResize.blob);
+      card.extractedWords = ocr.data.words;
+      card.imageWidth = imageResize.image.width;
+      card.imageHeight = imageResize.image.height;
+      this.stepCards.push(card);
+    } else {
+      this.logger.error(this.logPrefix, "Could not load image with words.");
     }
 
   }

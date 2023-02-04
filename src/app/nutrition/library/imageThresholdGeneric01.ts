@@ -10,6 +10,8 @@
  * Includes modifications by https://github.com/cofiem
  */
 
+import Logger from "../../logger/logger";
+
 const logPrefix = "imageThresholdGeneric01";
 
 /**
@@ -21,6 +23,8 @@ const logPrefix = "imageThresholdGeneric01";
  * @returns A one dimensional array of image pixel data with the threshold applied.
  */
 const imageThresholdGeneric01 = function (pixels: ImageData, threshold: number = 127, method: string = 'luminance'): Uint8ClampedArray {
+  const logger = new Logger();
+  logger.debug(logPrefix, "Start imageThresholdGeneric01.");
   if (threshold < 0 || threshold > 255) {
     throw new Error("Threshold value must be between 0 and 255.");
   }
@@ -60,6 +64,8 @@ const imageThresholdGeneric01 = function (pixels: ImageData, threshold: number =
     // A
     result.push(a);
   }
+
+  logger.info(logPrefix, "Finished imageThresholdGeneric01.");
 
   return new Uint8ClampedArray(result);
 }

@@ -1,49 +1,59 @@
-import {Component, Input} from '@angular/core';
-import {ProgressBarMode} from "@angular/material/progress-bar";
-import {SafeUrl} from "@angular/platform-browser";
+import {Component, Input, OnInit} from '@angular/core';
 import {LoggerService} from "../../../logger/logger.service";
 import StepCard from "../../library/step-card";
+import {BasicWord} from "../../library/tesseract";
 
 @Component({
   selector: 'app-step-card',
   templateUrl: './step-card.component.html',
   styleUrls: ['./step-card.component.scss']
 })
-export class StepCardComponent implements StepCard {
+export class StepCardComponent implements OnInit {
 
   private logPrefix: string = "Step Card Component";
 
   constructor(private logger: LoggerService) {
+
   }
 
   @Input()
-  title: string = "Placeholder title";
-  @Input()
-  imageId: string = "";
-  @Input()
-  imageAlt: string = "";
-  @Input()
-  imageSrc: SafeUrl = "";
-  @Input()
-  progressMode: ProgressBarMode = "determinate";
-  @Input()
-  progressValue: number = 0;
-  @Input()
-  imageLoadFunc: (event: Event) => void = (event) => {
-    this.logger.info(this.logPrefix, "imageLoadFunc");
-    this.logger.info(this.logPrefix, event);
-  };
-  @Input()
-  imageErrorFunc: (event: Event) => void = (event: Event) => {
-    this.logger.error(this.logPrefix, "imageErrorFunc");
-    this.logger.error(this.logPrefix, event);
-  };
+  stepCard: StepCard | undefined;
+
+  ngOnInit(): void {
+  }
 
   async imageOnLoad(event: Event) {
-    this.imageLoadFunc(event);
+    this.stepCard?.imageLoadFunc(event);
   }
 
   async imageOnError(event: Event) {
-    this.imageErrorFunc(event);
+    this.stepCard?.imageErrorFunc(event);
+  }
+
+  displayBox(extractedWord: BasicWord) {
+    const result = {
+      position: 'absolute', border: '1px solid red', 'overflow-wrap':'anywhere',
+      left: '0px', top: '0px', width: '0px', height: '0px'
+    };
+    if (!this.stepCard) {
+      return result;
+    }
+
+    // NOTE: if the CSS width of the image changes, also change it here
+    const imageWidth = 400;
+    const sizeFactor = imageWidth / this.stepCard?.imageWidth;
+
+    const left = extractedWord.bbox.x0 * sizeFactor;
+    const top = extractedWord.bbox.y0 * sizeFactor;
+    const width = Math.abs(extractedWord.bbox.x1 - extractedWord.bbox.x0) * sizeFactor;
+    const height = Math.abs(extractedWord.bbox.y1 - extractedWord.bbox.y0) * sizeFactor;
+
+    result.left = Math.round(left).toString() + 'px';
+    result.top = Math.round(top).toString() + 'px';
+    result.width = Math.round(width).toString() + 'px';
+    result.height = Math.round(height).toString() + 'px';
+
+
+    return result;
   }
 }

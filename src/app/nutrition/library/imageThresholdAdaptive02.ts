@@ -30,10 +30,12 @@ const logPrefix = "imageThresholdAdaptive02";
 const imageThresholdAdaptive02 = function (
   imageInput: string | HTMLImageElement | HTMLCanvasElement,
   threshold: number = 25): ImageData {
+  const logger = new Logger();
+  logger.debug(logPrefix, "Start imageThresholdAdaptive02.");
+
   if (threshold < 0 || threshold > 100) {
     throw new Error("Threshold must be greater than or equal to 0 and less than or equal to 100.");
   }
-  const logger = new Logger();
 
   let matOriginal: any = null;
   let matGrayBorder: any = null;
@@ -107,7 +109,11 @@ const imageThresholdAdaptive02 = function (
     };
     OpenCVSetMatPixels(matOriginal, binarizationFunc);
 
-    return OpenCVimshow(matOriginal);
+    const result = OpenCVimshow(matOriginal);
+
+    logger.info(logPrefix, "Finished imageThresholdAdaptive02.");
+
+    return result;
 
   } finally {
     if (matOriginal) matOriginal.delete();
